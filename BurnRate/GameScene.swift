@@ -2589,6 +2589,7 @@ class GameScene: BaseScene {
     }
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
+        sound.playHit()
         if self.currentPlayer != nil && self.players[self.currentPlayer!].isAI && self.gameState != .gameOver && animationQueue.count != 0
         {
             return
