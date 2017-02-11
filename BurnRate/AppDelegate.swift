@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  BurnRate
 //
-//  Created by Arthas on 2017/2/11.
+//  Created by Arthas on 2017/2/5.
 //  Copyright © 2017年 Arthas. All rights reserved.
 //
 
