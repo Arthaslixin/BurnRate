@@ -14,7 +14,7 @@ class SoundManager :SKNode{
     //申明一个播放器
     var BGMPlayer = AVAudioPlayer()
     //播放点击的动作音效
-//    let hitAct = SKAction.playSoundFileNamed("hit.mp3", waitForCompletion: false)
+    let hitAct = SKAction.playSoundFileNamed("SE1.wav", waitForCompletion: false)
     
     //播放背景音乐的音效
     func playBGM(play: Bool = true){
@@ -40,7 +40,7 @@ class SoundManager :SKNode{
     }
     
     //播放点击音效动作的方法
-//    func playHit(){
-//        self.run(hitAct)
-//    }
+    func playHit(){
+        self.run(hitAct)
+    }
 }

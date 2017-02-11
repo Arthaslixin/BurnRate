@@ -116,7 +116,7 @@ class WelcomeScene: BaseScene
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-//        sound.playHit()
+        sound.playHit()
         let touchPoint = touches.first?.location(in: self)
         let touchNode = nodes(at: touchPoint!)
         let node = touchNode.first!
