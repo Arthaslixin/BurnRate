@@ -8,15 +8,17 @@
 
 import SpriteKit
 import GameplayKit
-class WelcomeScene: BaseScene {
+class WelcomeScene: BaseScene
+{
+    let scaleData = WelcomeSceneScaleData()
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
     lazy var sound = SoundManager()
     
     override func didMove(to view: SKView) {
         initUserData()
-        positionData.sceneScale()
-        self.size = CGSize(width: positionData.sceneWidth, height: positionData.sceneHeight)
+        scaleData.welcomeSceneScaleData()
+        self.size = CGSize(width: scaleData.sceneWidth, height: scaleData.sceneHeight)
         self.addChild(sound)
         if defaults.bool(forKey: "BGM")
         {
@@ -30,21 +32,21 @@ class WelcomeScene: BaseScene {
     func createBackground()
     {
         let bgImage = SKSpriteNode(imageNamed: "background")
-        bgImage.position = CGPoint(x : positionData.sceneWidth / 2, y : positionData.sceneHeight / 2)
+        bgImage.position = CGPoint(x : scaleData.sceneWidth / 2, y : scaleData.sceneHeight / 2)
         bgImage.zPosition = 0
         addChild(bgImage)
         
-        let blackBackground = SKShapeNode(rectOf: CGSize(width: 400, height: 500), cornerRadius: 30)
+        let blackBackground = SKShapeNode(rectOf: scaleData.blackBackgroundScale , cornerRadius: 30)
         blackBackground.name = "blackBackground"
         blackBackground.fillColor = UIColor.black
         blackBackground.alpha = 0.8
-        blackBackground.position = CGPoint(x: frame.midX, y: frame.midY - 100)
+        blackBackground.position = scaleData.blackBackgroundPosition
         blackBackground.zPosition = -1
         addChild(blackBackground)
     }
     private func createLabels()
     {
-        createLabel(text: "Burn Rate", name: "title", pos: CGPoint(x: frame.midX, y: frame.midY + 200), z: 1, fontSize: 150)
+        createLabel(text: "Burn Rate", name: "title", pos: scaleData.title, z: 1, fontSize: 150)
         createLabel(text: "BGM", name: "BGM", pos: CGPoint(x: frame.midX - 100, y: frame.midY + 30), z: -1, fontSize: 60)
         createLabel(text: "Back", name: "back", pos: CGPoint(x: frame.midX, y: frame.midY - 230), z: -1, fontSize: 60)
     }

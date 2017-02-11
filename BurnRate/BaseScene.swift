@@ -18,9 +18,8 @@ struct GlobalData
     //Other global data...
 }
 
-class BaseScene:SKScene {
-    
-    let positionData = CardsPositionData()
+class BaseScene:SKScene
+    {
     var labels : [SKLabelNode] = []
     func createLabel(text: String, name: String, pos: CGPoint, z: CGFloat,
                      color: UIColor = UIColor.white, fontSize: CGFloat = 32)

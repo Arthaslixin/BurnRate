@@ -8,11 +8,15 @@
 
 import Foundation
 import SpriteKit
+class SceneScale
+{
+    var sceneWidth: CGFloat = 0.0
+    var sceneHeight: CGFloat = 0.0
+}
 
 
 
-
-class CardsPositionData {
+class GameSceneScaleData: SceneScale {
     struct playerPosition {
         var sales = CGPoint(x: 0, y: 0)
         var finance = CGPoint(x: 0, y: 0)
@@ -36,8 +40,6 @@ class CardsPositionData {
         var employeeYPlus : CGFloat = 2
         var playcardsYPlus : CGFloat = 1
     }
-    var sceneWidth: CGFloat = 0.0
-    var sceneHeight: CGFloat = 0.0
     var author = CGPoint(x: 0, y: 0)
     var publicCards = publicCardsPosition()
     var player0Card = playerPosition()
@@ -61,10 +63,11 @@ class CardsPositionData {
     var currentPlayer = CGPoint(x: 0, y: 0)
 
 
-    func sceneScale()
+    func gameSceneScaleData()
     {
         self.sceneWidth = UIScreen.main.bounds.size.width
         self.sceneHeight = UIScreen.main.bounds.size.height
+        print(self.sceneWidth, self.sceneHeight)
         if sceneWidth / sceneHeight == CGFloat(4.0/3.0)
         {
             self.author = CGPoint(x: 950, y: 50)
@@ -117,7 +120,8 @@ class CardsPositionData {
             self.player2Card.stateCardsYPlus = 25
             self.player2Card.cardsInHandXPlus = 60
         }
-        else if 1.6 <= sceneWidth / sceneHeight && sceneWidth / sceneHeight <= 1.8
+        //else if 1.6 <= sceneWidth / sceneHeight && sceneWidth / sceneHeight <= 1.8
+        else
         {
             self.sceneWidth = 1024
             self.sceneHeight = 578
@@ -172,5 +176,33 @@ class CardsPositionData {
             self.player2Card.cardsInHandXPlus = 60
         }
     }
-}
 
+}
+class WelcomeSceneScaleData : SceneScale
+{
+    var title = CGPoint(x: 0, y: 0)
+    var blackBackgroundScale = CGSize(width: 0, height: 0)
+    var blackBackgroundPosition = CGPoint(x : 0, y: 0)
+    func welcomeSceneScaleData()
+    {
+        
+        self.sceneWidth = UIScreen.main.bounds.size.width
+        self.sceneHeight = UIScreen.main.bounds.size.height
+        print(self.sceneWidth, self.sceneHeight)
+        if sceneWidth / sceneHeight == CGFloat(4.0/3.0)
+        {
+            self.title = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 + 200)
+            self.blackBackgroundScale = CGSize(width: 400, height: 500)
+            self.blackBackgroundPosition = CGPoint(x : sceneWidth / 2, y: sceneHeight / 2 - 100)
+        }
+        else
+        {
+            self.sceneWidth = 1024
+            self.sceneHeight = 578
+            self.title = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 + 150)
+            self.blackBackgroundScale = CGSize(width: 500, height: 400)
+            self.blackBackgroundPosition = CGPoint(x : sceneWidth / 2, y: sceneHeight / 2 - 80)
+        }
+        
+    }
+}

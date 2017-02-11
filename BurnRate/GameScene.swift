@@ -39,7 +39,7 @@ class departmentsOfEmployees{
     }
 }
 class GameScene: BaseScene {
-    
+    let positionData = GameSceneScaleData()
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
     var playcardsPool : [PlayCards] = []
@@ -255,7 +255,7 @@ class GameScene: BaseScene {
                 cardZPosition += zPlus
             }
         }
-        var pos = CardsPositionData.playerPosition()
+        var pos = GameSceneScaleData.playerPosition()
         switch player
         {
         case 0:
@@ -1718,7 +1718,7 @@ class GameScene: BaseScene {
 
         if self.players.count == 0
         {
-            positionData.sceneScale()
+            positionData.gameSceneScaleData()
             self.size = CGSize(width: positionData.sceneWidth, height: positionData.sceneHeight)
             (self.development.cards, self.sales.cards, self.finance.cards ,self.HR.cards ,self.playcardsPool) = initCards()
             self.playcardsPool = randomPlayCards(array: self.playcardsPool)
