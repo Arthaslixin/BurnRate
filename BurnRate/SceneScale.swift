@@ -97,10 +97,10 @@ class GameSceneScaleData: SceneScale {
             self.player0Card.HR = CGPoint(x: 50, y: 300)
             self.player0Card.development = CGPoint(x: 150, y: 300)
             self.player0Card.stateCards = CGPoint(x: 250, y: 300)
-            self.player0Card.cardsInHand = CGPoint(x: 50, y: 600)
+            self.player0Card.cardsInHand = CGPoint(x: -50, y: sceneHeight / 2)
             self.player0Card.employeeYPlus = 10
             self.player0Card.stateCardsYPlus = 25
-            self.player0Card.cardsInHandXPlus = 60
+            self.player0Card.cardsInHandXPlus = 0
             self.player1Card.sales = CGPoint(x: 350, y: 50)
             self.player1Card.finance = CGPoint(x: 450, y: 50)
             self.player1Card.HR = CGPoint(x: 550, y: 50)
@@ -115,10 +115,10 @@ class GameSceneScaleData: SceneScale {
             self.player2Card.HR = CGPoint(x: 950, y: 350)
             self.player2Card.development = CGPoint(x: 850, y: 350)
             self.player2Card.stateCards = CGPoint(x: 750, y: 350)
-            self.player2Card.cardsInHand = CGPoint(x: 650, y: 250)
+            self.player2Card.cardsInHand = CGPoint(x: sceneWidth + 50, y: sceneHeight / 2)
             self.player2Card.employeeYPlus = 10
             self.player2Card.stateCardsYPlus = 25
-            self.player2Card.cardsInHandXPlus = 60
+            self.player2Card.cardsInHandXPlus = 0
         }
         //else if 1.6 <= sceneWidth / sceneHeight && sceneWidth / sceneHeight <= 1.8
         else
@@ -181,6 +181,10 @@ class GameSceneScaleData: SceneScale {
 class WelcomeSceneScaleData : SceneScale
 {
     var title = CGPoint(x: 0, y: 0)
+    var BGMLabel = CGPoint(x: 0, y: 0)
+    var backLabel = CGPoint(x: 0, y: 0)
+    var singleGameLabel = CGPoint(x: 0, y: 0)
+    var hotseatLabel = CGPoint(x: 0, y: 0)
     var blackBackgroundScale = CGSize(width: 0, height: 0)
     var blackBackgroundPosition = CGPoint(x : 0, y: 0)
     func welcomeSceneScaleData()
@@ -194,6 +198,10 @@ class WelcomeSceneScaleData : SceneScale
             self.title = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 + 200)
             self.blackBackgroundScale = CGSize(width: 400, height: 500)
             self.blackBackgroundPosition = CGPoint(x : sceneWidth / 2, y: sceneHeight / 2 - 100)
+            self.BGMLabel = CGPoint(x: sceneWidth / 2 - 100, y: sceneHeight / 2 + 30)
+            self.backLabel = CGPoint(x: sceneWidth / 2, y:sceneHeight / 2 - 230)
+            self.singleGameLabel = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 + 30)
+            self.hotseatLabel = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 - 60)
         }
         else
         {
@@ -202,6 +210,12 @@ class WelcomeSceneScaleData : SceneScale
             self.title = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 + 150)
             self.blackBackgroundScale = CGSize(width: 500, height: 400)
             self.blackBackgroundPosition = CGPoint(x : sceneWidth / 2, y: sceneHeight / 2 - 80)
+            self.BGMLabel = CGPoint(x: sceneWidth / 2 - 100, y: sceneHeight / 2 + 30)
+            self.backLabel = CGPoint(x: sceneWidth / 2, y:sceneHeight / 2 - 230)
+            self.singleGameLabel = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 + 30)
+            self.hotseatLabel = CGPoint(x: sceneWidth / 2, y: sceneHeight / 2 - 60)
+
+            
         }
         
     }

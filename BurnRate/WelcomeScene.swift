@@ -47,8 +47,10 @@ class WelcomeScene: BaseScene
     private func createLabels()
     {
         createLabel(text: "Burn Rate", name: "title", pos: scaleData.title, z: 1, fontSize: 150)
-        createLabel(text: "BGM", name: "BGM", pos: CGPoint(x: frame.midX - 100, y: frame.midY + 30), z: -1, fontSize: 60)
-        createLabel(text: "Back", name: "back", pos: CGPoint(x: frame.midX, y: frame.midY - 230), z: -1, fontSize: 60)
+        createLabel(text: "BGM", name: "BGM", pos: scaleData.BGMLabel, z: -1, fontSize: 60)
+        createLabel(text: "Back", name: "back", pos: scaleData.backLabel, z: -1, fontSize: 60)
+        createLabel(text: "Single Game", name: "singleGame",pos: scaleData.singleGameLabel, z: -1, fontSize: 60)
+        createLabel(text: "Hotseat", name: "hotseat", pos: scaleData.hotseatLabel, z: -1, fontSize: 60)
     }
     private func createButtons()
     {
@@ -63,7 +65,11 @@ class WelcomeScene: BaseScene
     {
         if node.name == "start"
         {
-            goToScene(newScene: SceneType.GameScene)
+            self.childNode(withName: "blackBackground")?.zPosition = 2
+            self.childNode(withName: "singleGame")?.zPosition = 3
+            self.childNode(withName: "hotseat")?.zPosition = 3
+            self.childNode(withName: "back")?.zPosition = 3
+//            goToScene(newScene: SceneType.GameScene)
         }
         else if node.name == "option"
         {
@@ -100,6 +106,18 @@ class WelcomeScene: BaseScene
             self.childNode(withName: "BGMOff")?.zPosition = -1
             self.childNode(withName: "blackBackground")?.zPosition = -1
             self.childNode(withName: "back")?.zPosition = -1
+            self.childNode(withName: "singleGame")?.zPosition = -1
+            self.childNode(withName: "hotseat")?.zPosition = -1
+        }
+        else if node.name == "singleGame"
+        {
+            gameMode = .single
+            goToScene(newScene: SceneType.GameScene)
+        }
+        else if node.name == "hotseat"
+        {
+            gameMode = .hotseat
+            goToScene(newScene: SceneType.GameScene)
         }
     }
     private func initUserData()

@@ -9,8 +9,12 @@
 import SpriteKit
 import GameplayKit
 
-var animationQueue : [Int] = []
-var animationNum = 0
+
+enum gameModeEnum
+{
+    case single
+    case hotseat
+}
 enum gameStateMachine
 {
     case chooseStartPlayer
@@ -28,8 +32,12 @@ enum gameStateMachine
     case confirmWarning
     case gameOver
     case menu
-    
+    case hotseatWall
 }
+
+var animationQueue : [Int] = []
+var animationNum = 0
+var gameMode = gameModeEnum.single
 
 class departmentsOfEmployees{
     var department = departmentsEnum.sales
@@ -106,7 +114,6 @@ class GameScene: BaseScene {
         blackBackground.zPosition = -1
         addChild(blackBackground)
         
-        
     }
     func createButtons()
     {
@@ -151,6 +158,8 @@ class GameScene: BaseScene {
         createLabel(text: "RESTART", name: "restartMenu", pos: CGPoint(x: frame.midX, y: frame.midY + 50 ), z: -1, fontSize : 50)
         createLabel(text: "OPTION", name: "option", pos: CGPoint(x: frame.midX, y: frame.midY - 50), z: -1, fontSize : 50)
         createLabel(text: "MAIN MENU", name: "mainMenu", pos: CGPoint(x: frame.midX, y: frame.midY - 150), z: -1, fontSize : 50)
+        createLabel(text: "Please pass the device to the next player~", name: "hotseatText", pos: CGPoint(x: frame.midX, y: frame.midY), z: -1, fontSize : 60)
+        
         if self.childNode(withName: "currentPlayerLabel") == nil && self.currentPlayer != nil
         {
             let currentPlayerLabel = SKLabelNode(text: "Player\(self.currentPlayer! + 1)'s Turn :")
@@ -272,7 +281,6 @@ class GameScene: BaseScene {
         PlayerCardsPosition(Array: self.players[player].HR.cards, pos: pos.HR, yPlus: pos.employeeYPlus)
         PlayerCardsPosition(Array: self.players[player].development.cards, pos: pos.development, yPlus: pos.employeeYPlus)
         PlayerCardsPosition(Array: self.players[player].stateCards, pos: pos.stateCards, xPlus: pos.stateCardsXPlus, yPlus: pos.stateCardsYPlus)
-
         PlayerCardsPosition(Array: self.players[player].cardsInHand, pos: pos.cardsInHand, xPlus: pos.cardsInHandXPlus, zPlus: 0)
         for each in self.players[player].cardsInHand
         {
@@ -321,7 +329,7 @@ class GameScene: BaseScene {
         {
             self.players[self.currentPlayer!].contractor = 0
         }
-//        print("engineer",engineer,"contractor",self.players[self.currentPlayer!].contractor,"badidea",self.players[self.currentPlayer!].badIdea)
+
         let discardStateCard = self.players[self.currentPlayer!].burnThisTurn()
         for each in discardStateCard
         {
@@ -359,8 +367,29 @@ class GameScene: BaseScene {
         {
             self.playerOut(player: self.currentPlayer!)
         }
-        
-        self.changeTurn()
+        if gameMode == .hotseat
+        {
+            gameState = .hotseatWall
+            self.hotseat()
+        }
+        else
+        {
+            self.changeTurn()
+        }
+    }
+    func hotseat()
+    {
+        if gameState == .hotseatWall
+        {
+        self.childNode(withName: "blackBackground")?.zPosition = 198
+        self.childNode(withName: "hotseatText")?.zPosition = 199
+        }
+        else
+        {
+            self.childNode(withName: "blackBackground")?.zPosition = -1
+            self.childNode(withName: "hotseatText")?.zPosition = -1
+            self.changeTurn()
+        }
     }
     func playerOut(player: Int)
     {
@@ -1738,10 +1767,14 @@ class GameScene: BaseScene {
             {
                 let newPlayer = Player()
                 newPlayer.name = "player\(i)"
-                if i != 0
+                if gameMode == .single
                 {
-                    newPlayer.isAI = true
+                    if i != 1
+                    {
+                        newPlayer.isAI = true
+                    }
                 }
+                
                 self.players.append(newPlayer)
             }
             self.createBackground()
@@ -1929,6 +1962,7 @@ class GameScene: BaseScene {
                 {
                     self.gameState = gameStateMachine.selectOP
                 }
+                self.players[self.currentPlayer!].currentCard = nil
 
             }
             else
@@ -2014,7 +2048,7 @@ class GameScene: BaseScene {
                 goToScene(newScene: SceneType.WelcomeScene)
             }
         }
-        if self.gameState == .chooseStartPlayer    //Choose which player to start
+        if gameState == .chooseStartPlayer    //Choose which player to start
         {
             for player in 0...self.numberOfPlayers - 1
             {
@@ -2040,6 +2074,14 @@ class GameScene: BaseScene {
                 self.gameProcess(touchNode: [node])
             }
         }
+        else if gameState == .hotseatWall
+        {
+            if node == self.childNode(withName: "blackBackground")
+            {
+                gameState = .nothing
+                self.hotseat()
+            }
+        }
         else if gameState == .pickCards
         {
             if node is EmployeeCards
@@ -2047,7 +2089,7 @@ class GameScene: BaseScene {
                 let departments = [self.sales, self.finance, self.HR, self.development]
                 for department in departments
                 {
-                    if department.cards.last! == node && !self.if2VP(node: node as! EmployeeCards, player: self.currentPlayer!)
+                    if department.cards.last != nil && department.cards.last! == node && !self.if2VP(node: node as! EmployeeCards, player: self.currentPlayer!)
                     {
                         self.gameProcess(touchNode: [node])
                         break
@@ -2272,7 +2314,6 @@ class GameScene: BaseScene {
                 {
                     self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
                     self.players[self.currentPlayer!].currentCard!.chosen = false
-                    self.players[self.currentPlayer!].currentCard = nil
                     self.playerCardsPosition(player: self.currentPlayer!)
                     self.childNode(withName: "cancel")?.position.x = 520
                     self.childNode(withName: "confirm")?.zPosition = 1
@@ -2540,6 +2581,26 @@ class GameScene: BaseScene {
         else
         {
             (self.childNode(withName: "currentPlayerLabel") as! SKLabelNode).text = "Player\(self.currentPlayer! + 1)'s Turn :"
+            if gameMode == .hotseat
+            {
+                for player in 0...self.numberOfPlayers - 1
+                {
+                    if player != self.currentPlayer!
+                    {
+                        for each in self.players[player].cardsInHand
+                        {
+                            each.setFront(isFront: false)
+                        }
+                    }
+                    else
+                    {
+                        for each in self.players[player].cardsInHand
+                        {
+                            each.setFront(isFront: true)
+                        }
+                    }
+                }
+            }
             if self.gameover()
             {
                 self.gameState = .gameOver
