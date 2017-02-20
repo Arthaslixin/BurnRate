@@ -23,21 +23,42 @@ enum statusEnum {
 var employeeCardTexture : Dictionary<String, SKTexture> = ["EmployeeCardBack": SKTexture(imageNamed: "EmployeeCardBack")]
 var playCardTexture : Dictionary<String, SKTexture> = ["PlayCardBack": SKTexture(imageNamed: "PlayCardBack")]
 public class CardSprite: SKSpriteNode {
-    let TimeInterval = 0.25
     var chosen = false
     var isFront = false
-    public func moveCard(moveToPoint: CGPoint) {
+    public func moveAndShow(moveToPoint: CGPoint) {
+        let TimeInterval = 0.25
         let num = animationNum
         animationQueue.append(num)
         animationNum += 1
-//        print(self.name!,moveToPoint)
+        let zposition = self.zPosition
+        let zpositionPlus = SKAction.run {
+            self.zPosition = 999
+        }
+        let zpositionRestore = SKAction.run {
+            self.zPosition = zposition
+        }
+        let move1 = SKAction.move(to: CGPoint(x: 512, y: 384), duration: TimeInterval)
+        let larger = SKAction.scale(to: 6, duration: TimeInterval)
+        let group1 = SKAction.group([move1,larger])
+        let wait = SKAction.wait(forDuration: 1.0)
+        let move2 = SKAction.move(to: moveToPoint, duration: TimeInterval)
+        let smaller = SKAction.scale(to: 1, duration: TimeInterval)
+        let group2 = SKAction.group([move2,smaller])
+        let seq = SKAction.sequence([zpositionPlus,group1,wait,group2])
+        
+        self.run(seq){ () in
+            animationQueue.remove(at: animationQueue.index(of: num)!)
+        }
+    }
+    public func move(moveToPoint: CGPoint) {
+        let TimeInterval = 0.25
+        let num = animationNum
+        animationQueue.append(num)
+        animationNum += 1
         let move = SKAction.move(to: moveToPoint, duration: TimeInterval)
-//        let rotate = SKAction.rotate(byAngle: 6, duration: TimeInterval*10)
         self.run(move){ () in
             animationQueue.remove(at: animationQueue.index(of: num)!)
         }
-//        self.run(rotate)
-//        print("*** Moving \(self)")
     }
 }
 
@@ -213,6 +234,7 @@ func initCards() -> (development : [EmployeeCards], sales : [EmployeeCards], fin
         newPlayCard.value = allPlayCards[currentPoint].value
         newPlayCard.zPosition = 1        
         newPlayCard.texture = playCardTexture["PlayCardBack"]
+
         var needSkill = ""
         for each in newPlayCard.needSkill!
         {
