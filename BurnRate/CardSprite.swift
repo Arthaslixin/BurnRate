@@ -25,38 +25,44 @@ var playCardTexture : Dictionary<String, SKTexture> = ["PlayCardBack": SKTexture
 public class CardSprite: SKSpriteNode {
     var chosen = false
     var isFront = false
-    public func moveAndShow(moveToPoint: CGPoint) {
+    var temp = false
+    public func moveAndShow(moveToPoint: CGPoint, zposition: CGFloat) {
+        let positionData = GameSceneScaleData()
+        positionData.gameSceneScaleData()
         let TimeInterval = 0.25
         let num = animationNum
         animationQueue.append(num)
         animationNum += 1
-        let zposition = self.zPosition
         let zpositionPlus = SKAction.run {
             self.zPosition = 999
         }
         let zpositionRestore = SKAction.run {
             self.zPosition = zposition
         }
-        let move1 = SKAction.move(to: CGPoint(x: 512, y: 384), duration: TimeInterval)
+        let move1 = SKAction.move(to: CGPoint(x: positionData.sceneWidth / 2, y: positionData.sceneHeight / 2), duration: TimeInterval)
         let larger = SKAction.scale(to: 6, duration: TimeInterval)
         let group1 = SKAction.group([move1,larger])
-        let wait = SKAction.wait(forDuration: 1.0)
+        let wait = SKAction.wait(forDuration: 0.5)
         let move2 = SKAction.move(to: moveToPoint, duration: TimeInterval)
         let smaller = SKAction.scale(to: 1, duration: TimeInterval)
         let group2 = SKAction.group([move2,smaller])
-        let seq = SKAction.sequence([zpositionPlus,group1,wait,group2])
+        let seq = SKAction.sequence([zpositionPlus,group1,wait,group2,zpositionRestore])
         
         self.run(seq){ () in
             animationQueue.remove(at: animationQueue.index(of: num)!)
         }
     }
-    public func move(moveToPoint: CGPoint) {
+    public func move(moveToPoint: CGPoint, zposition: CGFloat) {
         let TimeInterval = 0.25
         let num = animationNum
         animationQueue.append(num)
         animationNum += 1
         let move = SKAction.move(to: moveToPoint, duration: TimeInterval)
-        self.run(move){ () in
+        let setZposition = SKAction.run {
+            self.zPosition = zposition
+        }
+        let seq = SKAction.sequence([move, setZposition])
+        self.run(seq){ () in
             animationQueue.remove(at: animationQueue.index(of: num)!)
         }
     }
@@ -98,19 +104,6 @@ public class PlayCards : CardSprite {
         let Card = PlayCards()
         return Card
     }
-//    func setAction()
-//    {
-//        let fire : SKAction?
-//        let hire : SKAction?
-//        let poach : SKAction?
-//        let funding : SKAction?
-//        
-//        switch self.type!
-//        {
-//            case "FIRE":
-//                self.action = fire
-//        }
-//    }
     public func setFront(isFront: Bool)
     {
         self.isFront = isFront

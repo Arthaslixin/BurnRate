@@ -60,11 +60,13 @@ class GameScene: BaseScene {
     var numberOfPlayers = 3
     var currentPlayer : Int?
     var selectedPlayer : Int?
-    var focusNodeName : String?
-    var focusNodeZPosition : CGFloat?
+//    var focusNodeName : String?
+//    var focusNodeZPosition : CGFloat?
     var playerAction = 0
     var gameState = gameStateMachine.chooseStartPlayer
     var lastGameState = gameStateMachine.chooseStartPlayer
+    var showLargerCardsTargetCards = [CardSprite]()
+    var showLargerCardsStep = 0 // 0: 选部门 1: 选牌
     lazy var sound = SoundManager()
 //    let positionData = CardsPositionData()
     private var lastUpdateTime = 0.0
@@ -103,17 +105,34 @@ class GameScene: BaseScene {
     func createBackground()
     {
         let bgImage = SKSpriteNode(imageNamed: "background")
+        bgImage.name = "background"
         bgImage.position = CGPoint(x : positionData.sceneWidth / 2, y : positionData.sceneHeight / 2)
         bgImage.zPosition = 0
         addChild(bgImage)
         
-        let blackBackground = SKShapeNode(rectOf: CGSize(width: 1920, height: 1080))
-        blackBackground.name = "blackBackground"
-        blackBackground.fillColor = UIColor.black
-        blackBackground.alpha = 0.7
-        blackBackground.position = CGPoint(x: frame.midX, y: frame.midY)
-        blackBackground.zPosition = -1
-        addChild(blackBackground)
+        func createRect(size: CGSize, name: String, color: UIColor, alpha: CGFloat, pos: CGPoint, zpos: CGFloat, cornerRadius: CGFloat = 0)
+        {
+            var rect = SKShapeNode(rectOf: size)
+            if cornerRadius != 0
+            {
+                rect = SKShapeNode(rectOf: size, cornerRadius: cornerRadius)
+            }
+            rect.name = name
+            rect.fillColor = color
+            rect.alpha = alpha
+            rect.position = pos
+            rect.zPosition = zpos
+            addChild(rect)
+        }
+        createRect(size: CGSize(width: 1920, height: 1080), name: "blackBackground", color: UIColor.black, alpha: 0.7, pos: CGPoint(x: positionData.sceneWidth / 2, y: positionData.sceneHeight / 2), zpos: -1)
+        createRect(size: CGSize(width: 56, height: 75), name: "whiteBackground", color: UIColor.white, alpha: 1, pos: CGPoint(x: -500, y: -500), zpos: -1)
+        
+        createRect(size: CGSize(width: 120, height: 100), name: "player0Area", color: UIColor.brown, alpha: 0.6, pos: CGPoint(x: positionData.player0Name.x, y: positionData.player0Name.y - 15), zpos: 1, cornerRadius: 10)
+        createRect(size: CGSize(width: 120, height: 100), name: "player1Area", color: UIColor.orange, alpha: 0.6, pos: CGPoint(x: positionData.player1Name.x, y: positionData.player1Name.y - 15), zpos: 1, cornerRadius: 10)
+        createRect(size: CGSize(width: 120, height: 100), name: "player2Area", color: UIColor.darkGray, alpha: 0.6, pos: CGPoint(x: positionData.player2Name.x, y: positionData.player2Name.y - 15), zpos: 1, cornerRadius: 10)
+
+        
+        
         
     }
     func createButtons()
@@ -124,12 +143,12 @@ class GameScene: BaseScene {
     func createLabels()
     {
 //        createLabel(text: "By Arthas", name: "author", pos: positionData.author, z: 99)
-        createLabel(text: "\(self.players[0].money)", name: "player0Money", pos: positionData.player0Money, z: 1, fontSize: 65)
-        createLabel(text: "\(self.players[1].money)", name: "player1Money", pos: positionData.player1Money, z: 1, fontSize: 65)
-        createLabel(text: "\(self.players[2].money)", name: "player2Money", pos: positionData.player2Money, z: 1, fontSize: 65)
-        createLabel(text: "player1", name: "player0", pos: positionData.player0Name, z: 1)
-        createLabel(text: "player2", name: "player1", pos: positionData.player1Name, z: 1)
-        createLabel(text: "player3", name: "player2", pos: positionData.player2Name, z: 1)
+        createLabel(text: "\(self.players[0].money)", name: "player0Money", pos: positionData.player0Money, z: 2, fontSize: 65)
+        createLabel(text: "\(self.players[1].money)", name: "player1Money", pos: positionData.player1Money, z: 2, fontSize: 65)
+        createLabel(text: "\(self.players[2].money)", name: "player2Money", pos: positionData.player2Money, z: 2, fontSize: 65)
+        createLabel(text: "Robin", name: "player0", pos: positionData.player0Name, z: 2)
+        createLabel(text: "Player", name: "player1", pos: positionData.player1Name, z: 2)
+        createLabel(text: "Jack", name: "player2", pos: positionData.player2Name, z: 2)
         createLabel(text: "Confirm", name: "confirm", pos: positionData.confirm_Restart, z: -1)
         createLabel(text: "Cancel", name: "cancel", pos: positionData.cancel, z: -1)
         createLabel(text: "", name: "win", pos: positionData.chooseStartPlayer_Win, z: -1, fontSize : 50)
@@ -147,7 +166,7 @@ class GameScene: BaseScene {
         createLabel(text: "Please select an employee card in opponent's hands:", name: "selectOPEmployee", pos: positionData.labels, z: -1)
         createLabel(text: "Please select an opponent:", name: "selectOP", pos: positionData.labels, z: -1)
         createLabel(text: "Please select an employee card in your hands:", name: "selectEmployeeInHand", pos: positionData.labels, z: -1)
-        createLabel(text: "Please select an employee card on Desk:", name: "selectEmployeeOnDesk", pos: positionData.labels, z: -1)
+        createLabel(text: "Please select an employee card on Desk:", name: "showLargerCardsOnDesk", pos: positionData.labels, z: -1)
         createLabel(text: "Please select the second card to use:", name: "selectSecondCard", pos: positionData.labels, z: -1)
         createLabel(text: "Please select a Bad Idea:", name: "selectBadIdea", pos: positionData.labels, z: -1)
         createLabel(text: "You can't play this card!", name: "cardDisable", pos: positionData.labels, z: -1)
@@ -160,7 +179,7 @@ class GameScene: BaseScene {
         createLabel(text: "OPTION", name: "option", pos: CGPoint(x: frame.midX, y: frame.midY - 50), z: -1, fontSize : 50)
         createLabel(text: "MAIN MENU", name: "mainMenu", pos: CGPoint(x: frame.midX, y: frame.midY - 150), z: -1, fontSize : 50)
         createLabel(text: "Please pass the device to the next player~", name: "hotseatText", pos: CGPoint(x: frame.midX, y: frame.midY), z: -1, fontSize : 60)
-        
+        createLabel(text: "", name: "addMoney", pos: CGPoint(x: 0, y: 0), z: -1, color: UIColor.yellow, fontSize: 50)
         if self.childNode(withName: "currentPlayerLabel") == nil && self.currentPlayer != nil
         {
             let currentPlayerLabel = SKLabelNode(text: "Player\(self.currentPlayer! + 1)'s Turn :")
@@ -169,8 +188,33 @@ class GameScene: BaseScene {
             currentPlayerLabel.name = "currentPlayerLabel"
             addChild(currentPlayerLabel)
         }
+        func addMoney(node: SKLabelNode)
+        {
+            let move = SKAction.moveTo(y: 150, duration: 0.5)
+            let wait = SKAction.wait(forDuration: 0.25)
+            let fade = SKAction.fadeOut(withDuration: 0.25)
+            let seq = SKAction.sequence([wait,fade])
+            let group = SKAction.group([move,seq])
+            node.run(group)
+        }
     }
-    
+    func addMoney(money: Int, pos: CGPoint)
+    {   let position = CGPoint(x: pos.x + 100, y: pos.y)
+        let node = (self.childNode(withName: "addMoney") as! SKLabelNode)
+        let changePos = SKAction.run {
+            node.position = position
+            node.zPosition = 1
+            node.text = "+\(money)"
+        }
+        let move = SKAction.moveTo(y: pos.y + 50, duration: 0.75)
+        let fadeOut = SKAction.fadeOut(withDuration: 0.25)
+        let wait = SKAction.wait(forDuration: 0.25)
+        let fadeIn = SKAction.fadeIn(withDuration: 0.25)
+        let fade = SKAction.sequence([fadeIn,wait,fadeOut])
+        let group = SKAction.group([move,fade])
+        let all = SKAction.sequence([changePos,group])
+        node.run(all)
+    }
     func publicCardsMovePosition(card: CardSprite) -> CGPoint
     {
         if card is EmployeeCards
@@ -197,42 +241,94 @@ class GameScene: BaseScene {
         let departments = [self.sales, self.finance, self.HR, self.development]
         for department in departments
         {
-            if department.cards.last != nil && department.cards.last!.isFront == false
+            if department.cards.count != 0
             {
-                department.cards.last!.setFront(isFront: true)
+                for each in department.cards
+                {
+                    if each == department.cards.last
+                    {
+                        each.setFront(isFront: true)
+                    }
+                    else
+                    {
+                        each.setFront(isFront: false)
+                    }
+                }
             }
+            
         }
     }
-    func selectEmployee(player: Player, department: departmentsEnum)
+    func showLargerCardsOn(cards: [CardSprite] = [])
     {
-        if gameState == .selectEmployee
+        self.childNode(withName: "blackBackground")?.zPosition = 197
+        self.childNode(withName: "confirm")?.zPosition = 199
+        self.childNode(withName: "cancel")?.zPosition = 199
+        if self.players[self.currentPlayer!].currentCard?.type == "FIRE"
         {
-            self.childNode(withName: "blackBackground")?.zPosition = 198
-            var employees : departmentsOfEmployees
-            switch department {
-                case .sales:
-                    employees = player.sales
-                case .finance:
-                    employees = player.finance
-                case .HR:
-                    employees = player.HR
-                case .development:
-                    employees = player.development
-            }
-            let gap : CGFloat = 5
-            let scale : CGFloat = 2
-            // 计算每张牌位置
-            var posX = (positionData.sceneWidth - CGFloat(employees.cards.count - 1) * (self.playcardsPool.first!.size.width * CGFloat(scale) + gap)) / 2
-            for each in employees.cards
+            self.childNode(withName: "selectEmployeeInHand")?.zPosition = 199
+        }
+        else if self.players[self.currentPlayer!].currentCard?.type == "RELEASE"
+        {
+            self.childNode(withName: "selectBadIdea")?.zPosition = 199
+        }
+        else
+        {
+            self.childNode(withName: "selectOPEmployee")?.zPosition = 199
+        }
+        let gap : CGFloat = 10
+        let scale : CGFloat = 2
+        self.childNode(withName: "whiteBackground")?.zPosition = 198
+        self.childNode(withName: "whiteBackground")?.setScale(scale)
+        // 计算每张牌位置
+        var posX = (positionData.sceneWidth - CGFloat(cards.count - 1) * (self.playcardsPool.first!.size.width * CGFloat(scale) + gap)) / 2
+
+        if self.players[self.currentPlayer!].currentCard!.type! == "RELEASE"
+        {
+            for each in cards
             {
-                each.zPosition = 199
-                each.setScale(scale)
-                each.position = CGPoint(x: posX, y: positionData.sceneHeight / 2)
-                posX += self.playcardsPool.first!.size.width * CGFloat(scale) + gap
+                if (each as! PlayCards).type! == "BAD IDEA"
+                {
+                    let card = EmployeeCards(imageNamed: (each as! PlayCards).playCardFront)
+                    card.name = "temp_" + each.name!
+                    card.temp = true
+                    card.zPosition = 199
+                    card.setScale(scale)
+                    card.position = CGPoint(x: posX, y: positionData.sceneHeight / 2)
+                    self.addChild(card)
+                    posX += each.size.width * CGFloat(scale) + gap
+                }
+            }
+        }
+        else
+        {
+            for each in cards
+            {
+                let card = EmployeeCards(imageNamed: (each as! EmployeeCards).employeeCardFront)
+                card.name = "temp_" + each.name!
+                card.temp = true
+                card.zPosition = 199
+                card.setScale(scale)
+                card.position = CGPoint(x: posX, y: positionData.sceneHeight / 2)
+                self.addChild(card)
+                posX += each.size.width * CGFloat(scale) + gap
             }
         }
     }
-    func CardsPosition()
+    func showLargerCardsOff()
+    {
+        self.childNode(withName: "blackBackground")?.zPosition = -1
+        self.childNode(withName: "whiteBackground")?.zPosition = -1
+        self.childNode(withName: "whiteBackground")?.position = CGPoint(x: -500, y: -500)
+        for each in self.children
+        {
+            if each is CardSprite && (each as! CardSprite).temp
+            {
+                each.removeFromParent()
+            }
+        }
+
+    }
+    func CardsPosition(animation: Int = 1)
     {
         func publicCardsPosition(Array: [CardSprite], pos: CGPoint, yPlus: CGFloat)
         {
@@ -242,28 +338,35 @@ class GameScene: BaseScene {
             {
                 if Array is [EmployeeCards] && gameState != .chooseStartPlayer      //避免开局初始化时有动画
                 {
-                    each.move(moveToPoint: pos)
+                    each.move(moveToPoint: pos, zposition: CGFloat(cardZPosition))
                 }
                 else
                 {
-                    if each.position != pos
+                    if animation == 0
                     {
-                        each.position = pos
+                        if each.position != pos
+                        {
+                            each.position = pos
+                        }
+                        if Int(each.zPosition) != cardZPosition
+                        {
+                            each.zPosition = CGFloat(cardZPosition)
+                        }
                     }
-                }
-                if Int(each.zPosition) != cardZPosition
-                {
-                    each.zPosition = CGFloat(cardZPosition)
+                    else if animation == 1
+                    {
+                        each.move(moveToPoint: pos, zposition: CGFloat(cardZPosition))
+                    }
+                    else if animation == 2
+                    {
+                        each.moveAndShow(moveToPoint: pos, zposition: CGFloat(cardZPosition))
+                    }
                 }
                 pos.y += yPlus
                 cardZPosition += 1
             }
         }
-
-        self.development.cards.last?.setFront(isFront: true)
-        self.finance.cards.last?.setFront(isFront: true)
-        self.HR.cards.last?.setFront(isFront: true)
-        self.sales.cards.last?.setFront(isFront: true)
+        self.updateFront()
         
 
         publicCardsPosition(Array: self.playcardsPool, pos: positionData.publicCards.playcards, yPlus: positionData.publicCards.playcardsYPlus)
@@ -272,10 +375,14 @@ class GameScene: BaseScene {
         publicCardsPosition(Array: self.HR.cards, pos: positionData.publicCards.HR, yPlus: positionData.publicCards.employeeYPlus)
         publicCardsPosition(Array: self.development.cards,pos: positionData.publicCards.development, yPlus: positionData.publicCards.employeeYPlus)
     }
-    func playerCardsPosition(player: Int, animation: Int)
+    func playerCardsPosition(player: Int, animation: Int, cards: [CardSprite] = [])
     {
         func PlayerCardsPosition(Array: [CardSprite], pos: CGPoint, xPlus: CGFloat = 0, yPlus: CGFloat = 0, zPlus: Int = 1)
         {
+            if Array.count != 0
+            {
+                Array.last!.isFront = true
+            }
             var pos = pos
             var cardZPosition = 1
             for each in Array
@@ -283,22 +390,18 @@ class GameScene: BaseScene {
 
                 if each.position != pos             //animation 0: none 1: move 2: move and show
                 {
-                    if animation == 1
+                    if animation == 1 && !cards.contains(each)
                     {
-                        each.move(moveToPoint: pos)
+                        each.move(moveToPoint: pos, zposition: CGFloat(cardZPosition))
                     }
-                    else if animation == 2
+                    else if animation == 1 && cards.contains(each)
                     {
-                        each.moveAndShow(moveToPoint: pos)
+                        each.moveAndShow(moveToPoint: pos, zposition: CGFloat(cardZPosition))
                     }
                     else
                     {
                         each.position = pos
                     }
-                }
-                if each.zPosition != CGFloat(cardZPosition)
-                {
-                    each.zPosition = CGFloat(cardZPosition)
                 }
                 pos.x += xPlus
                 pos.y += yPlus
@@ -330,25 +433,6 @@ class GameScene: BaseScene {
                 each.position.y += 10
             }
         }
-        let departments = [self.players[player].sales.cards, self.players[player].HR.cards, self.players[player].finance.cards ,self.players[player].development.cards, self.players[player].stateCards] as [Any]
-        for department in departments
-        {
-            for each in department as! Array<Any>
-            {
-                if (each as! CardSprite).chosen
-                {
-                    if (each as! CardSprite) == (department as! Array<Any>).last as! CardSprite
-                    {
-                        (each as! CardSprite).position = CGPoint(x: (each as! CardSprite).position.x, y: (each as! CardSprite).position.y + 10)
-                    }
-                    else
-                    {
-                        (each as! CardSprite).zPosition = 99
-                    }
-                }
-            }
-        }
-
     }
     func turnEnd()
     {
@@ -479,7 +563,7 @@ class GameScene: BaseScene {
         players[player].gameover = true
     }
     
-    func selectOP(card: EmployeeCards) -> Int
+    func selectOP() -> Int
     {
         for num in 0...self.numberOfPlayers - 1
         {
@@ -548,7 +632,6 @@ class GameScene: BaseScene {
         self.childNode(withName: "selectOP")?.zPosition = -1
         self.childNode(withName: "selectOPEmployee")?.zPosition = -1
         self.childNode(withName: "cancel")?.zPosition = -1
-        self.childNode(withName: "cancel")?.position.x = 520
         if !self.players[self.currentPlayer!].isAI
         {
             self.childNode(withName: "confirm")?.zPosition = 1
@@ -556,24 +639,21 @@ class GameScene: BaseScene {
         if self.players[self.currentPlayer!].cardsPlayedThisTurn < 4
         {
             self.CardsPosition()
-            self.playerCardsPosition(player: 0, animation: 2)
-            self.playerCardsPosition(player: 1, animation: 2)
-            self.playerCardsPosition(player: 2, animation: 2)
-        }
-
-        if self.players[self.currentPlayer!].cardsPlayedThisTurn >= 4
-        {
-            self.childNode(withName: "confirm")?.zPosition = -1
-            self.childNode(withName: "cancel")?.zPosition = -1
-            self.turnEnd()
-        }
-        else
-        {
+            self.playerCardsPosition(player: 0, animation: 1)
+            self.playerCardsPosition(player: 1, animation: 1)
+            self.playerCardsPosition(player: 2, animation: 1)
             self.gameState = gameStateMachine.playcards
             if !self.players[self.currentPlayer!].isAI
             {
                 self.childNode(withName: "pleasePlayCards")?.zPosition = 1
             }
+
+        }
+        else
+        {
+            self.childNode(withName: "confirm")?.zPosition = -1
+            self.childNode(withName: "cancel")?.zPosition = -1
+            self.turnEnd()
         }
     }
     func AI()
@@ -1213,8 +1293,16 @@ class GameScene: BaseScene {
                     if !self.players[self.currentPlayer!].isAI
                     {
                         self.childNode(withName: "pleasePlayCards")?.zPosition = -1
-                        self.childNode(withName: "selectOPEmployee")?.zPosition = 1
+                        if card.type! == "POACH"
+                        {
+                            self.childNode(withName: "selectOPEmployee")?.zPosition = 1
+                        }
+                        else
+                        {
+                            self.childNode(withName: "selectOP")?.zPosition = 1
+                        }
                         self.childNode(withName: "cancel")?.zPosition = 1
+                        self.childNode(withName: "confirm")?.zPosition = -1
                     }
                     self.gameState = gameStateMachine.selectOPEmployee
                 }
@@ -1225,7 +1313,6 @@ class GameScene: BaseScene {
                         self.childNode(withName: "pleasePlayCards")?.zPosition = -1
                         self.childNode(withName: "selectOP")?.zPosition = 1
                         self.childNode(withName: "cancel")?.zPosition = 1
-                        self.childNode(withName: "cancel")?.position.x = 630
                         self.childNode(withName: "confirm")?.zPosition = -1
                     }
                     self.gameState = gameStateMachine.selectOP
@@ -1243,6 +1330,7 @@ class GameScene: BaseScene {
                             self.childNode(withName: "pleasePlayCards")?.zPosition = -1
                             self.childNode(withName: "selectEmployeeInHand")?.zPosition = 1
                             self.childNode(withName: "cancel")?.zPosition = 1
+                            self.childNode(withName: "confirm")?.zPosition = -1
                         }
                         self.gameState = gameStateMachine.selectEmployeeInHand
                     }
@@ -1256,9 +1344,8 @@ class GameScene: BaseScene {
                         if !self.players[self.currentPlayer!].isAI
                         {
                             self.childNode(withName: "pleasePlayCards")?.zPosition = -1
-                            self.childNode(withName: "selectEmployeeOnDesk")?.zPosition = 1
+                            self.childNode(withName: "showLargerCardsOnDesk")?.zPosition = 1
                             self.childNode(withName: "cancel")?.zPosition = 1
-                            self.childNode(withName: "cancel")?.position.x = 630
                             self.childNode(withName: "confirm")?.zPosition = -1
                         }
                         self.gameState = gameStateMachine.selectEmployeeOnDesk
@@ -1275,6 +1362,18 @@ class GameScene: BaseScene {
                             self.childNode(withName: "pleasePlayCards")?.zPosition = -1
                         }
                         self.players[self.currentPlayer!].money += card.value!
+                        var pos = CGPoint(x: 0, y: 0)
+                        switch self.currentPlayer! {
+                            case 0:
+                                pos = positionData.player0Money
+                            case 1:
+                                pos = positionData.player1Money
+                            case 2:
+                                pos = positionData.player2Money
+                            default:
+                                break
+                        }
+                        addMoney(money: card.value!, pos: pos)
                         (self.childNode(withName: "player\(self.currentPlayer!)Money") as! SKLabelNode).text = "\(self.players[self.currentPlayer!].money)"
                         self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: card) as! PlayCards)
                         self.playcardsPool = randomPlayCards(array: self.playcardsPool)
@@ -1291,7 +1390,9 @@ class GameScene: BaseScene {
                         if !self.players[self.currentPlayer!].isAI
                         {
                             self.childNode(withName: "pleasePlayCards")?.zPosition = -1
-                            self.childNode(withName: "selectBadIdea")?.zPosition = 1
+                            self.showLargerCardsStep = 1
+                            self.showLargerCardsTargetCards = self.players[self.currentPlayer!].stateCards
+                            self.showLargerCardsOn(cards: self.showLargerCardsTargetCards)
                         }
                         self.gameState = gameStateMachine.selectBadIdeaToRelease
                     }
@@ -1385,6 +1486,7 @@ class GameScene: BaseScene {
                     {
                         self.childNode(withName: "selectEmployeeInHand")?.zPosition = -1
                         self.childNode(withName: "selectSecondCard")?.zPosition = 1
+                        self.childNode(withName: "cancel")?.zPosition = 1
                         self.gameState = gameStateMachine.selectSecondCard
                     }
                 }
@@ -1412,7 +1514,7 @@ class GameScene: BaseScene {
                     if !self.players[self.currentPlayer!].isAI
                     {
                         self.childNode(withName: "selectOP")?.zPosition = -1
-                        self.childNode(withName: "selectEmployeeOnDesk")?.zPosition = 1
+                        self.childNode(withName: "showLargerCardsOnDesk")?.zPosition = 1
                         self.childNode(withName: "cancel")?.zPosition = 1
                     }
                     self.gameState = gameStateMachine.selectEmployeeOnDesk
@@ -1489,14 +1591,14 @@ class GameScene: BaseScene {
         {
             if card.type == "POACH"
             {
-                if card.needSkill!.contains(self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)].HRSkill)
+                if card.needSkill!.contains(self.players[self.selectOP()].HRSkill)
                 {
                     if self.players[self.currentPlayer!].OPCard!.status != .VP
                     {
-                        self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)].discardCard(card: self.players[self.currentPlayer!].OPCard!))
+                        self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!))
                         self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
                         self.playcardsPool = randomPlayCards(array: self.playcardsPool)
-                        writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)], targetCard: self.players[self.currentPlayer!].OPCard!)
+                        writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()], targetCard: self.players[self.currentPlayer!].OPCard!)
                         self.playNextCard()
                     }
                     else
@@ -1516,7 +1618,7 @@ class GameScene: BaseScene {
                             var cardToPlay : [PlayCards] = []
                             for each in self.players[self.currentPlayer!].cardsInHand
                             {
-                                if each.type == "POACH" && each.needSkill!.contains(self.players[self.currentPlayer!].HRSkill)
+                                if each.type == "POACH" && each.needSkill!.contains(self.players[self.selectOP()].HRSkill)
                                 {
                                     num += 1
                                     cardToPlay.append(each)
@@ -1528,7 +1630,7 @@ class GameScene: BaseScene {
                             }
                             else if num == 2
                             {
-                                self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)].discardCard(card: self.players[self.currentPlayer!].OPCard!))
+                                self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!))
                                 self.players[self.currentPlayer!].cardsPlayedThisTurn += 1
                                 for each in cardToPlay
                                 {
@@ -1539,7 +1641,7 @@ class GameScene: BaseScene {
                                     }
                                 }
                                 self.playcardsPool = randomPlayCards(array: self.playcardsPool)
-                                writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)],
+                                writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()],
                                          card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].OPCard!)
                                 self.playNextCard()
                             }
@@ -1549,6 +1651,7 @@ class GameScene: BaseScene {
                                 {
                                     self.childNode(withName: "selectEmployeeInHand")?.zPosition = -1
                                     self.childNode(withName: "selectSecondCard")?.zPosition = 1
+                                    self.childNode(withName: "cancel")?.zPosition = 1
                                 }
                                 self.gameState = gameStateMachine.selectSecondCard
                             }
@@ -1563,9 +1666,9 @@ class GameScene: BaseScene {
             else        //Conflict of opinion  and   Out to pasture
             {
                 
-                if card.needSkill![0] <= self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)].VP
+                if card.needSkill![0] <= self.players[self.selectOP()].VP
                 {
-                    writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)])
+                    writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()])
                     var department : departmentsOfEmployees?
                     switch self.players[self.currentPlayer!].OPCard!.department
                     {
@@ -1579,7 +1682,7 @@ class GameScene: BaseScene {
                             department = self.development
                     }
                     self.players[self.currentPlayer!].OPCard!.setFront(isFront: false)
-                    department!.cards.insert(self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)].discardCard(card: self.players[self.currentPlayer!].OPCard!) as! EmployeeCards, at: 0)
+                    department!.cards.insert(self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!) as! EmployeeCards, at: 0)
 
                     self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
                     self.playcardsPool = randomPlayCards(array: self.playcardsPool)
@@ -1628,11 +1731,11 @@ class GameScene: BaseScene {
             }
             else       //POACH
             {
-                self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)].discardCard(card: self.players[self.currentPlayer!].OPCard!))
+                self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!))
                 self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
                 self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].secondCard!) as! PlayCards)
                 self.playcardsPool = randomPlayCards(array: self.playcardsPool)
-                writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP(card: self.players[self.currentPlayer!].OPCard!)], card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].OPCard!)
+                writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()], card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].OPCard!)
                 self.playNextCard()
             }
         }
@@ -1660,7 +1763,6 @@ class GameScene: BaseScene {
             self.childNode(withName: "OPDisable")?.zPosition = 1
             self.childNode(withName: "selectOP")?.zPosition = -1
             self.childNode(withName: "cancel")?.zPosition = -1
-            self.childNode(withName: "cancel")?.position.x = 520
             self.childNode(withName: "confirm")?.zPosition = 1
             self.gameState = gameStateMachine.confirmWarning
         }
@@ -1669,6 +1771,7 @@ class GameScene: BaseScene {
             self.childNode(withName: "OPCardDisable")?.zPosition = 1
             self.childNode(withName: "selectOPEmployee")?.zPosition = -1
             self.childNode(withName: "cancel")?.zPosition = -1
+            self.childNode(withName: "confirm")?.zPosition = 1
             self.gameState = gameStateMachine.confirmWarning
         }
         else if self.gameState == gameStateMachine.confirmWarning
@@ -1696,7 +1799,6 @@ class GameScene: BaseScene {
                 self.childNode(withName: "OPDisable")?.zPosition = -1
                 self.childNode(withName: "selectOP")?.zPosition = 1
                 self.childNode(withName: "cancel")?.zPosition = 1
-                self.childNode(withName: "cancel")?.position.x = 630
                 self.childNode(withName: "confirm")?.zPosition = -1
                 self.players[self.currentPlayer!].OP = nil
                 self.gameState = gameStateMachine.selectOP
@@ -1706,11 +1808,12 @@ class GameScene: BaseScene {
                 self.childNode(withName: "OPCardDisable")?.zPosition = -1
                 self.childNode(withName: "selectOPEmployee")?.zPosition = 1
                 self.childNode(withName: "cancel")?.zPosition = 1
+                self.childNode(withName: "confirm")?.zPosition = -1
                 self.players[self.currentPlayer!].OPCard!.chosen = false
                 self.players[self.currentPlayer!].OPCard = nil
                 for each in 0...self.numberOfPlayers - 1
                 {
-                    self.playerCardsPosition(player: each, animation: 1)
+                    self.playerCardsPosition(player: each, animation: 0)
                 }
                 self.gameState = gameStateMachine.selectOPEmployee
             }
@@ -1721,7 +1824,7 @@ class GameScene: BaseScene {
                 self.childNode(withName: "cancel")?.zPosition = 1
                 self.players[self.currentPlayer!].selfCard!.chosen = false
                 self.players[self.currentPlayer!].selfCard = nil
-                self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
+                self.playerCardsPosition(player: self.currentPlayer!, animation: 0)
                 self.gameState = gameStateMachine.selectEmployeeInHand
             }
         }
@@ -1821,7 +1924,7 @@ class GameScene: BaseScene {
             self.createBackground()
             self.createLabels()
             self.createButtons()
-            self.CardsPosition()
+            self.CardsPosition(animation: 0)
             self.childNode(withName: "chooseStartPlayer")?.zPosition = 1
             self.childNode(withName: "startFromPlayer0")?.zPosition = 1
             self.childNode(withName: "startFromPlayer1")?.zPosition = 1
@@ -1860,10 +1963,10 @@ class GameScene: BaseScene {
                 if node == department.cards.last
                 {
                     self.players[self.currentPlayer!].getCard(card: department.cards.removeLast())
+                    self.updateFront()
+                    self.playerCardsPosition(player: self.currentPlayer!, animation: 1, cards: [node as! CardSprite])
                 }
             }
-            self.updateFront()
-            self.playerCardsPosition(player: self.currentPlayer!, animation: 2)
             if self.sales.cards.count + self.finance.cards.count + self.HR.cards.count + self.development.cards.count == 40 - self.numberOfPlayers * 4
             {
                 self.childNode(withName: "pickCard")?.zPosition = -1
@@ -2264,59 +2367,66 @@ class GameScene: BaseScene {
         }
         else if self.gameState == .selectEmployeeInHand   //select an employee card in hand
         {
-            if node == self.childNode(withName: "cancel")
+            if self.showLargerCardsStep == 0
             {
-                if let card = self.players[self.currentPlayer!].selfCard
+                if node == self.childNode(withName: "cancel")
                 {
-                    card.chosen = false
-                    self.players[self.currentPlayer!].selfCard = nil
+                    self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
                     self.players[self.currentPlayer!].currentCard!.chosen = false
                     self.players[self.currentPlayer!].currentCard = nil
                     self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
-                }
-                self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
-                self.players[self.currentPlayer!].currentCard!.chosen = false
-                self.players[self.currentPlayer!].currentCard = nil
-                self.childNode(withName: "selectEmployeeInHand")?.zPosition = -1
-                self.childNode(withName: "pleasePlayCards")?.zPosition = 1
-                self.gameProcess(touchNode: [node])
+                    self.childNode(withName: "selectEmployeeInHand")?.zPosition = -1
+                    self.childNode(withName: "pleasePlayCards")?.zPosition = 1
+                    self.childNode(withName: "confirm")?.zPosition = 1
+                    self.gameProcess(touchNode: [node])
 
-            }
-            else if node == childNode(withName: "confirm") && self.players[self.currentPlayer!].selfCard != nil
-            {
-                self.childNode(withName: "selectEmployeeInHand")?.zPosition = -1
-                self.childNode(withName: "cancel")?.zPosition = -1
-                self.gameProcess(touchNode: [node])
-            }
-            else
-            {
-//                let player = self.players[self.currentPlayer!]
-//                let departments = [player.HR.cards, player.sales.cards, player.finance.cards, player.development.cards]
-//                for department in departments
-//                {
-//                    for card in department
-//                    {
-//                        if card == node
-//                        {
-//                            card.chosen = true
-//                            self.players[self.currentPlayer!].selfCard = card
-//                        }
-//                        else if card != node && card.chosen
-//                        {
-//                            card.chosen = false
-//                        }
-//                    }
-//                }
-//                self.playerCardsPosition(player: self.currentPlayer!, animation: false)
-                let player = self.players[self.currentPlayer!]
-                let departments = [player.HR, player.sales, player.finance, player.development]
-                for department in departments
+                }
+                else
                 {
-                    if node is EmployeeCards && department.cards .contains(node as! EmployeeCards)
+                    let player = self.players[self.currentPlayer!]
+                    let departments = [player.HR, player.sales, player.finance, player.development]
+                    for department in departments
                     {
-                        self.lastGameState = self.gameState
-                        self.gameState = .selectEmployee
-                        self.selectEmployee(player: player, department: department.department)
+                        if node is EmployeeCards && department.cards .contains(node as! EmployeeCards)
+                        {
+                            self.showLargerCardsStep = 1
+                            self.showLargerCardsTargetCards = department.cards
+                            self.showLargerCardsOn(cards: self.showLargerCardsTargetCards)
+                        }
+                    }
+                }
+            }
+            else            //showLargerCardsStep == 1
+            {
+                if node == self.childNode(withName: "cancel")
+                {
+                    self.showLargerCardsStep = 0
+                    self.showLargerCardsOff()
+                    if self.players[self.currentPlayer!].selfCard != nil
+                    {
+                        self.players[self.currentPlayer!].selfCard = nil
+                    }
+                    self.childNode(withName: "cancel")?.zPosition = 1
+                    self.childNode(withName: "confirm")?.zPosition = -1
+                    self.childNode(withName: "selectEmployeeInHand")?.zPosition = 1
+                }
+                else if node == childNode(withName: "confirm") && self.players[self.currentPlayer!].selfCard != nil
+                {
+                    self.showLargerCardsStep = 0
+                    self.showLargerCardsOff()
+                    self.childNode(withName: "selectEmployeeInHand")?.zPosition = -1
+                    self.childNode(withName: "cancel")?.zPosition = -1
+                    self.gameProcess(touchNode: [self.players[self.currentPlayer!].selfCard!])
+                }
+                else if node is EmployeeCards
+                {
+                    for each in self.showLargerCardsTargetCards
+                    {
+                        if node.name! == "temp_" + each.name!
+                        {
+                            self.players[self.currentPlayer!].selfCard = (each as! EmployeeCards)
+                            self.childNode(withName: "whiteBackground")?.position = node.position
+                        }
                     }
                 }
             }
@@ -2329,7 +2439,6 @@ class GameScene: BaseScene {
                 self.players[self.currentPlayer!].currentCard!.chosen = false
                 self.players[self.currentPlayer!].currentCard = nil
                 self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
-                self.childNode(withName: "cancel")?.position.x = 520
                 self.childNode(withName: "confirm")?.zPosition = 1
                 self.childNode(withName: "selectOP")?.zPosition = -1
                 self.childNode(withName: "pleasePlayCards")?.zPosition = 1
@@ -2344,7 +2453,7 @@ class GameScene: BaseScene {
                 }
                 while op != self.currentPlayer
                 {
-                    if node == childNode(withName: "player\(op)") && !self.players[op].gameover
+                    if [self.childNode(withName: "player\(op)")!,self.childNode(withName: "player\(op)Money")!,self.childNode(withName: "player\(op)Area")!].contains(node)  && !self.players[op].gameover
                     {
                         self.players[self.currentPlayer!].OP = op
                         self.gameProcess(touchNode: [])
@@ -2367,14 +2476,13 @@ class GameScene: BaseScene {
                     self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
                     self.players[self.currentPlayer!].currentCard!.chosen = false
                     self.playerCardsPosition(player: self.currentPlayer!,animation: 1)
-                    self.childNode(withName: "cancel")?.position.x = 520
                     self.childNode(withName: "confirm")?.zPosition = 1
-                    self.childNode(withName: "selectEmployeeOnDesk")?.zPosition = -1
+                    self.childNode(withName: "showLargerCardsOnDesk")?.zPosition = -1
                     self.childNode(withName: "pleasePlayCards")?.zPosition = 1                    
                 }
                 else            //BAD HIRE
                 {
-                    self.childNode(withName: "selectEmployeeOnDesk")?.zPosition = -1
+                    self.childNode(withName: "showLargerCardsOnDesk")?.zPosition = -1
                     self.childNode(withName: "selectOP")?.zPosition = 1
                 }
                 self.gameProcess(touchNode: [node])
@@ -2388,8 +2496,7 @@ class GameScene: BaseScene {
                     if department.last == node && ((self.players[self.currentPlayer!].currentCard!.type! == "HIRE" && !self.if2VP(node: node as! EmployeeCards, player: self.currentPlayer!)) || self.players[self.currentPlayer!].currentCard!.type! == "BAD HIRE" && !self.if2VP(node: node as! EmployeeCards, player: self.players[self.currentPlayer!].OP!))
                     {
                         self.players[self.currentPlayer!].publicCards = department.last
-                        self.childNode(withName: "selectEmployeeOnDesk")?.zPosition = -1
-                        self.childNode(withName: "cancel")?.position.x = 520
+                        self.childNode(withName: "showLargerCardsOnDesk")?.zPosition = -1
                         self.childNode(withName: "confirm")?.zPosition = 1
                         self.gameProcess(touchNode: [node])
                         break
@@ -2399,78 +2506,115 @@ class GameScene: BaseScene {
         }
         else if self.gameState == .selectOPEmployee     //select OP card
         {
-            if node == self.childNode(withName: "cancel")
+            if self.showLargerCardsStep == 0
             {
-                if let card = self.players[self.currentPlayer!].OPCard
+                if node == self.childNode(withName: "cancel")
                 {
-                    card.chosen = false
-                    self.players[self.currentPlayer!].OPCard = nil
+                    self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
                     self.players[self.currentPlayer!].currentCard!.chosen = false
+                    self.players[self.currentPlayer!].currentCard = nil
+                    self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
+                    self.childNode(withName: "selectOPEmployee")?.zPosition = -1
+                    self.childNode(withName: "pleasePlayCards")?.zPosition = 1
+                    self.childNode(withName: "confirm")?.zPosition = 1
+                    self.gameProcess(touchNode: [node])
                 }
-                self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
-                self.players[self.currentPlayer!].currentCard!.chosen = false
-                self.players[self.currentPlayer!].currentCard = nil
-                self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
-                self.childNode(withName: "selectOPEmployee")?.zPosition = -1
-                self.childNode(withName: "pleasePlayCards")?.zPosition = 1
-                self.gameProcess(touchNode: [node])
-            }
-            else if node == self.childNode(withName: "confirm") && self.players[self.currentPlayer!].OPCard != nil
-            {
-                self.childNode(withName: "selectOPEmployee")?.zPosition = -1
-                self.gameProcess(touchNode: [node])
-            }
-            else
-            {
-                var op = self.currentPlayer! + 1
-                if op == self.players.count
+                else
                 {
-                    op = 0
-                }
-                while op != self.currentPlayer
-                {
-                    let departments = [self.players[op].sales.cards, self.players[op].development.cards, self.players[op].HR.cards, self.players[op].finance.cards]
-                    for department in departments
-                    {
-                        for card in department
-                        {
-                            if self.players[self.currentPlayer!].currentCard?.type == "POACH"
-                            {
-                                if card == node && (card.status != .VP || card.status == .VP && !self.if2VP(node: card, player: self.currentPlayer!))
-                                {
-                                    card.chosen = true
-                                    self.players[self.currentPlayer!].OPCard = card
-                                }
-                                else if card != node && card.chosen
-                                {
-                                    card.chosen = false
-                                }
-                            }
-                            else
-                            {
-                                if card == node && card.status == .VP
-                                {
-                                    card.chosen = true
-                                    self.players[self.currentPlayer!].OPCard = card
-                                }
-                                else if card != node && card.chosen
-                                {
-                                    card.chosen = false
-
-                                }
-                            }
-                        }
-                    }
-                    op += 1
+                    var op = self.currentPlayer! + 1
                     if op == self.players.count
                     {
                         op = 0
                     }
+                    while op != self.currentPlayer
+                    {
+                        let departments = [self.players[op].sales, self.players[op].development, self.players[op].HR, self.players[op].finance]
+                        if self.players[self.currentPlayer!].currentCard!.type == "POACH"
+                        {
+                            for department in departments
+                            {
+                                
+                                if node is EmployeeCards && department.cards .contains(node as! EmployeeCards)
+                                {
+                                    self.showLargerCardsStep = 1
+                                    self.showLargerCardsTargetCards = department.cards
+                                    self.showLargerCardsOn(cards: self.showLargerCardsTargetCards)
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if node == childNode(withName: "player\(op)") && !self.players[op].gameover
+                            {
+                                self.showLargerCardsStep = 1
+                                self.showLargerCardsTargetCards = []
+                                for department in departments
+                                {
+                                    if department.cards.count != 0 && department.cards.last!.status == .VP
+                                    {
+                                        self.showLargerCardsTargetCards.append(department.cards.last!)
+                                    }
+                                }
+                                self.showLargerCardsOn(cards: self.showLargerCardsTargetCards)
+                            }
+                        }
+                        op += 1
+                        if op == self.players.count
+                        {
+                            op = 0
+                        }
+                    }
                 }
-                for each in 0...self.numberOfPlayers - 1
+            }
+            else // showLargerCardsStep == 1
+            {
+                if node == self.childNode(withName: "cancel")
                 {
-                    self.playerCardsPosition(player: each, animation: 0)
+                    self.showLargerCardsStep = 0
+                    self.showLargerCardsOff()
+                    if self.players[self.currentPlayer!].OPCard != nil
+                    {
+                        self.players[self.currentPlayer!].OPCard = nil
+                    }
+                    self.childNode(withName: "cancel")?.zPosition = 1
+                    self.childNode(withName: "confirm")?.zPosition = -1
+                    if self.players[self.currentPlayer!].currentCard!.type == "POACH"
+                    {
+                        self.childNode(withName: "selectOPEmployee")?.zPosition = 1
+                    }
+                    else
+                    {
+                        self.childNode(withName: "selectOP")?.zPosition = 1
+                    }
                 }
+                else if node == childNode(withName: "confirm") && self.players[self.currentPlayer!].OPCard != nil
+                {
+                    self.showLargerCardsStep = 0
+                    self.showLargerCardsOff()
+                    self.childNode(withName: "selectOPEmployee")?.zPosition = -1
+                    self.childNode(withName: "selectOP")?.zPosition = -1
+                    self.childNode(withName: "cancel")?.zPosition = -1
+                    self.gameProcess(touchNode: [self.players[self.currentPlayer!].OPCard!])
+                }
+                else if node is EmployeeCards
+                {
+                    for each in self.showLargerCardsTargetCards
+                    {
+                        if node.name! == "temp_" + each.name!
+                        {
+                            if self.players[self.currentPlayer!].currentCard!.type == "POACH"
+                            {
+                                if self.if2VP(node: each as! EmployeeCards, player: self.currentPlayer!)
+                                {
+                                    break
+                                }
+                            }
+                            self.players[self.currentPlayer!].OPCard = (each as! EmployeeCards)
+                            self.childNode(withName: "whiteBackground")?.position = node.position
+                        }
+                    }
+                }
+
             }
         }
         else if self.gameState == .confirmWarning         //confirm warning
@@ -2482,41 +2626,46 @@ class GameScene: BaseScene {
         }
         else if self.gameState == .selectBadIdeaToRelease          //select a Bad Idea on self
         {
-            if node == self.childNode(withName: "cancel")
+            if self.showLargerCardsStep == 1      
             {
-                if let card = self.players[self.currentPlayer!].badIdeaCard
+                if node == self.childNode(withName: "cancel")
                 {
-                    card.chosen = false
-                    self.players[self.currentPlayer!].badIdeaCard = nil
-                    self.players[self.currentPlayer!].currentCard!.chosen = false
-                }
-                self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
-                self.players[self.currentPlayer!].currentCard!.chosen = false
-                self.players[self.currentPlayer!].currentCard = nil
-                self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
-                self.childNode(withName: "selectBadIdea")?.zPosition = -1
-                self.childNode(withName: "pleasePlayCards")?.zPosition = 1
-                self.gameProcess(touchNode: [node])
-            }
-            else if node == self.childNode(withName: "confirm") && self.players[self.currentPlayer!].badIdeaCard != nil
-            {
-                self.gameProcess(touchNode: [node])
-            }
-            else
-            {
-                for card in self.players[self.currentPlayer!].stateCards
-                {
-                    if node == card && card.type! == "BAD IDEA"
-                    {
-                        self.players[self.currentPlayer!].badIdeaCard = card
-                        self.players[self.currentPlayer!].badIdeaCard!.chosen = true
-                    }
-                    else if node != card && card.chosen
+                    self.showLargerCardsStep = 0
+                    self.showLargerCardsOff()
+                    if let card = self.players[self.currentPlayer!].badIdeaCard
                     {
                         card.chosen = false
+                        self.players[self.currentPlayer!].badIdeaCard = nil
+                        self.players[self.currentPlayer!].currentCard!.chosen = false
+                    }
+                    self.childNode(withName: "cancel")?.zPosition = 1
+                    self.players[self.currentPlayer!].cardsPlayedThisTurn -= 1
+                    self.players[self.currentPlayer!].currentCard!.chosen = false
+                    self.players[self.currentPlayer!].currentCard = nil
+                    self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
+                    self.childNode(withName: "selectBadIdea")?.zPosition = -1
+                    self.childNode(withName: "pleasePlayCards")?.zPosition = 1
+                    self.playerCardsPosition(player: self.currentPlayer!, animation: 0)
+                    self.gameProcess(touchNode: [node])
+                }
+                else if node == self.childNode(withName: "confirm") && self.players[self.currentPlayer!].badIdeaCard != nil
+                {
+                    self.showLargerCardsStep = 0
+                    self.showLargerCardsOff()
+                    self.childNode(withName: "cancel")?.zPosition = -1
+                    self.gameProcess(touchNode: [node])
+                }
+                else
+                {
+                    for each in self.showLargerCardsTargetCards
+                    {
+                        if node.name! == "temp_" + each.name!
+                        {
+                            self.players[self.currentPlayer!].badIdeaCard = (each as! PlayCards)
+                            self.childNode(withName: "whiteBackground")?.position = node.position
+                        }
                     }
                 }
-                self.playerCardsPosition(player: self.currentPlayer!, animation: 0)
             }
         }
         else if self.gameState == .selectSecondCard         //select second card
@@ -2527,36 +2676,56 @@ class GameScene: BaseScene {
                 if self.players[self.currentPlayer!].currentCard!.type! == "FIRE"
                 {
                     self.childNode(withName: "selectEmployeeInHand")?.zPosition = 1
+                    self.gameState = .selectEmployeeInHand
                 }
                 else                        //poach
                 {
                     self.childNode(withName: "selectOPEmployee")?.zPosition = 1
+                    self.gameState = .selectOPEmployee
+                }
+                if self.players[self.currentPlayer!].secondCard != nil
+                {
+                    self.players[self.currentPlayer!].secondCard!.chosen = false
+                    self.players[self.currentPlayer!].secondCard = nil
+                    self.playerCardsPosition(player: self.currentPlayer!, animation: 0)
                 }
             }
             else if node == self.childNode(withName: "confirm") && self.players[self.currentPlayer!].secondCard != nil
             {
                 self.gameProcess(touchNode: [node])
+                self.childNode(withName: "selectSecondCard")?.zPosition = -1
             }
             else if self.players[self.currentPlayer!].currentCard!.type == "FIRE"
             {
                 for card in self.players[self.currentPlayer!].cardsInHand
                 {
-                    if node == card && card != self.players[self.currentPlayer!].currentCard! && card.type == "FIRE" && card.needSkill!.contains(self.players[self.currentPlayer!].HRSkill) && self.players[self.currentPlayer!].currentCard!.type == "FIRE"
+                    if node == card && card != self.players[self.currentPlayer!].currentCard! && card.type == "FIRE" && card.needSkill!.contains(self.players[self.currentPlayer!].HRSkill)
                     {
                         card.chosen = true
                         self.players[self.currentPlayer!].secondCard = card
                     }
-                    else if node == card && card != self.players[self.currentPlayer!].currentCard! && card.type == "POACH" && card.needSkill!.contains(self.players[self.currentPlayer!].HRSkill) && self.players[self.currentPlayer!].currentCard!.type == "POACH"
-                    {
-                        card.chosen = true
-                        self.players[self.currentPlayer!].secondCard = card
-                    }
-                    else if node != card && card.chosen && card != self.players[self.currentPlayer!].currentCard!
+                    else if node != card && card != self.players[self.currentPlayer!].currentCard! && card.chosen
                     {
                         card.chosen = false
                     }
                 }
-                self.playerCardsPosition(player: self.currentPlayer!, animation: 2)
+                self.playerCardsPosition(player: self.currentPlayer!, animation: 0)
+            }
+            else if self.players[self.currentPlayer!].currentCard!.type == "POACH"
+            {
+                for card in self.players[self.currentPlayer!].cardsInHand
+                {
+                    if node == card && card != self.players[self.currentPlayer!].currentCard! && card.type == "POACH" && card.needSkill!.contains(self.players[self.selectOP()].HRSkill)
+                    {
+                        card.chosen = true
+                        self.players[self.currentPlayer!].secondCard = card
+                    }
+                    else if node != card && card != self.players[self.currentPlayer!].currentCard! && card.chosen
+                    {
+                        card.chosen = false
+                    }
+                }
+                self.playerCardsPosition(player: self.currentPlayer!, animation: 0)
             }
         }
     }
@@ -2610,7 +2779,12 @@ class GameScene: BaseScene {
             self.players[player].gameover = false
             self.playerCardsPosition(player: player, animation: 0)
         }
-        self.CardsPosition()
+        self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+        self.development.cards  = randomEmployeeCards(array: self.development.cards)
+        self.sales.cards = randomEmployeeCards(array: self.sales.cards)
+        self.finance.cards = randomEmployeeCards(array: self.finance.cards)
+        self.HR.cards = randomEmployeeCards(array: self.HR.cards)
+        self.CardsPosition(animation: 0)
         self.childNode(withName: "chooseStartPlayer")?.zPosition = 1
         self.childNode(withName: "startFromPlayer0")?.zPosition = 1
         self.childNode(withName: "startFromPlayer1")?.zPosition = 1
@@ -2702,25 +2876,28 @@ class GameScene: BaseScene {
     }
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        sound.playHit()
         if self.currentPlayer != nil && self.players[self.currentPlayer!].isAI && self.gameState != .gameOver && animationQueue.count != 0
         {
             return
         }
         let touchPoint = touches.first?.location(in: self)
         let touchNode = nodes(at: touchPoint!)
-        let card = touchNode.first!
-        if self.focusNodeName != nil
+        let node = touchNode.first!
+        if node != self.childNode(withName: "blackBackground") && node != self.childNode(withName: "background")
         {
-            self.childNode(withName: self.focusNodeName!)?.zPosition = self.focusNodeZPosition!
+            sound.playHit()
         }
-        if card is EmployeeCards && !self.sales.cards.contains(card as! EmployeeCards) && !self.finance.cards.contains(card as! EmployeeCards) && !self.HR.cards.contains(card as! EmployeeCards) && !self.development.cards.contains(card as! EmployeeCards)
-        {
-            self.focusNodeName = card.name!
-            self.focusNodeZPosition = card.zPosition
-            card.zPosition = 99
-        }
-        self.userInterface(node: card)
+//        if self.focusNodeName != nil
+//        {
+//            self.childNode(withName: self.focusNodeName!)?.zPosition = self.focusNodeZPosition!
+//        }
+//        if card is EmployeeCards && !self.sales.cards.contains(card as! EmployeeCards) && !self.finance.cards.contains(card as! EmployeeCards) && !self.HR.cards.contains(card as! EmployeeCards) && !self.development.cards.contains(card as! EmployeeCards)
+//        {
+//            self.focusNodeName = card.name!
+//            self.focusNodeZPosition = card.zPosition
+//            card.zPosition = 99
+//        }
+        self.userInterface(node: node)
 
     }
     

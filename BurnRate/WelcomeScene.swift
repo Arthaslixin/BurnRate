@@ -33,6 +33,7 @@ class WelcomeScene: BaseScene
     {
         let bgImage = SKSpriteNode(imageNamed: "background")
         bgImage.position = CGPoint(x : scaleData.sceneWidth / 2, y : scaleData.sceneHeight / 2)
+        bgImage.name = "background"
         bgImage.zPosition = 0
         addChild(bgImage)
         
@@ -134,10 +135,13 @@ class WelcomeScene: BaseScene
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        sound.playHit()
         let touchPoint = touches.first?.location(in: self)
         let touchNode = nodes(at: touchPoint!)
         let node = touchNode.first!
+        if node != self.childNode(withName: "blackBackground") && node != self.childNode(withName: "background")
+        {
+            sound.playHit()
+        }
         process(node: node)
     }
 
