@@ -60,8 +60,7 @@ class GameScene: BaseScene {
     var numberOfPlayers = 3
     var currentPlayer : Int?
     var selectedPlayer : Int?
-//    var focusNodeName : String?
-//    var focusNodeZPosition : CGFloat?
+    var waitForAnimation = false
     var playerAction = 0
     var gameState = gameStateMachine.chooseStartPlayer
     var lastGameState = gameStateMachine.chooseStartPlayer
@@ -198,8 +197,24 @@ class GameScene: BaseScene {
             node.run(group)
         }
     }
-    func addMoney(money: Int, pos: CGPoint)
-    {   let position = CGPoint(x: pos.x + 100, y: pos.y)
+    func addMoney(money: Int)
+    {
+        var pos = CGPoint(x: 0, y: 0)
+        var position = pos
+        switch self.currentPlayer! {
+        case 0:
+            pos = positionData.player0Money
+            position.x = pos.x + 100
+        case 1:
+            pos = positionData.player1Money
+            position.x = pos.x + 100
+        case 2:
+            pos = positionData.player2Money
+            position.x = pos.x - 100
+        default:
+            break
+        }
+        position.y = pos.y
         let node = (self.childNode(withName: "addMoney") as! SKLabelNode)
         let changePos = SKAction.run {
             node.position = position
@@ -328,7 +343,7 @@ class GameScene: BaseScene {
         }
 
     }
-    func CardsPosition(animation: Int = 1)
+    func CardsPosition(animation: Int = 1, changeFront: Bool = false)
     {
         func publicCardsPosition(Array: [CardSprite], pos: CGPoint, yPlus: CGFloat)
         {
@@ -359,7 +374,14 @@ class GameScene: BaseScene {
                     }
                     else if animation == 2
                     {
-                        each.moveAndShow(moveToPoint: pos, zposition: CGFloat(cardZPosition))
+                        if each == self.players[self.currentPlayer!].currentCard
+                        {
+                            each.moveAndShow(moveToPoint: pos, zposition: CGFloat(cardZPosition), changeFront: changeFront)
+                        }
+                        else
+                        {
+                            each.move(moveToPoint: pos, zposition: CGFloat(cardZPosition))
+                        }
                     }
                 }
                 pos.y += yPlus
@@ -436,6 +458,12 @@ class GameScene: BaseScene {
     }
     func turnEnd()
     {
+        self.gameState = gameStateMachine.nothing
+        if animationQueue.count != 0
+        {
+            self.waitForAnimation = true
+            return
+        }
         while self.players[self.currentPlayer!].cardsInHand.count < 6
         {
             if !self.players[self.currentPlayer!].isAI
@@ -458,7 +486,7 @@ class GameScene: BaseScene {
         let discardStateCard = self.players[self.currentPlayer!].burnThisTurn()
         for each in discardStateCard
         {
-            self.playcardsPool.append(each)
+            self.playcardsPool.insert(each, at: 0)
         }
         
         self.players[self.currentPlayer!].enableCards = []
@@ -479,10 +507,10 @@ class GameScene: BaseScene {
         self.players[self.currentPlayer!].secondFire = []
         self.players[self.currentPlayer!].secondPoach = []
         
-        self.gameState = gameStateMachine.nothing
-        self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+        
+//        self.playcardsPool = randomPlayCards(array: self.playcardsPool)
         self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
-        self.CardsPosition()
+        self.CardsPosition(animation: 1)
         self.players[self.currentPlayer!].cardsPlayedThisTurn = 0
 
         (self.childNode(withName: "player\(self.currentPlayer!)Money") as! SKLabelNode).text = "\(self.players[self.currentPlayer!].money)"
@@ -546,9 +574,8 @@ class GameScene: BaseScene {
         {
             card.setFront(isFront: false)
         }
-        self.playcardsPool.append(contentsOf: players[player].cardsInHand)
-        self.playcardsPool.append(contentsOf: players[player].stateCards)
-        self.playcardsPool = self.randomPlayCards(array: self.playcardsPool)
+        self.playcardsPool.insert(contentsOf: players[player].cardsInHand, at: 0)
+        self.playcardsPool.insert(contentsOf: players[player].stateCards, at: 0)
         self.players[player].HR.cards.removeAll()
         self.players[player].development.cards.removeAll()
         self.players[player].finance.cards.removeAll()
@@ -600,8 +627,11 @@ class GameScene: BaseScene {
     }
     func playNextCard()
     {
+        if self.players[self.currentPlayer!].isAI
+        {
+            self.players[self.currentPlayer!].currentCard!.setFront(isFront: true)
+        }
         self.players[self.currentPlayer!].currentCard!.chosen = false
-        self.players[self.currentPlayer!].currentCard = nil
         self.players[self.currentPlayer!].cardsChosen = 0
         self.players[self.currentPlayer!].OP = nil
         if self.players[self.currentPlayer!].OPCard != nil
@@ -636,12 +666,21 @@ class GameScene: BaseScene {
         {
             self.childNode(withName: "confirm")?.zPosition = 1
         }
-        if self.players[self.currentPlayer!].cardsPlayedThisTurn < 4
+        if self.players[self.currentPlayer!].isAI
+        {
+            self.CardsPosition(animation: 2, changeFront: true)
+        }
+        else
         {
             self.CardsPosition()
-            self.playerCardsPosition(player: 0, animation: 1)
-            self.playerCardsPosition(player: 1, animation: 1)
-            self.playerCardsPosition(player: 2, animation: 1)
+        }
+        self.playerCardsPosition(player: 0, animation: 1)
+        self.playerCardsPosition(player: 1, animation: 1)
+        self.playerCardsPosition(player: 2, animation: 1)
+        
+        if self.players[self.currentPlayer!].cardsPlayedThisTurn < 4
+        {
+            
             self.gameState = gameStateMachine.playcards
             if !self.players[self.currentPlayer!].isAI
             {
@@ -655,6 +694,7 @@ class GameScene: BaseScene {
             self.childNode(withName: "cancel")?.zPosition = -1
             self.turnEnd()
         }
+//        self.players[self.currentPlayer!].currentCard = nil
     }
     func AI()
     {
@@ -1149,18 +1189,6 @@ class GameScene: BaseScene {
         else if self.gameState == .playOrDiscard
         {
             enableCards()
-            for each in AIPlayer.enableCards
-            {
-                NSLog(each.name!)
-            }
-//            print("badHireTarget",AIPlayer.badHireTarget)
-//            print("badHireTargetOP",AIPlayer.badHireTargetOP)
-//            print("badIdeaTargetOP",AIPlayer.badIdeaTargetOP)
-//            print("outToPastureOrConflictOfOpnionTarget",AIPlayer.outToPastureOrConflictOfOpnionTarget)
-//            print("fireTarget",AIPlayer.fireTarget)
-//            print("secondFire",AIPlayer.secondFire)
-//            print("hireTarget",AIPlayer.hireTarget)
-//            print("newBusinessPlanOrLayoffsTargetOP",AIPlayer.newBusinessPlanOrLayoffsTargetOP)
             if AIPlayer.releaseTarget.count > 0 || AIPlayer.enableCards.count + AIPlayer.secondFire.count + AIPlayer.secondPoach.count > 3
             {
                 self.gameProcess(touchNode: [self.childNode(withName: "playcards")!])
@@ -1362,22 +1390,11 @@ class GameScene: BaseScene {
                             self.childNode(withName: "pleasePlayCards")?.zPosition = -1
                         }
                         self.players[self.currentPlayer!].money += card.value!
-                        var pos = CGPoint(x: 0, y: 0)
-                        switch self.currentPlayer! {
-                            case 0:
-                                pos = positionData.player0Money
-                            case 1:
-                                pos = positionData.player1Money
-                            case 2:
-                                pos = positionData.player2Money
-                            default:
-                                break
-                        }
-                        addMoney(money: card.value!, pos: pos)
+                        addMoney(money: card.value!)
                         (self.childNode(withName: "player\(self.currentPlayer!)Money") as! SKLabelNode).text = "\(self.players[self.currentPlayer!].money)"
-                        self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: card) as! PlayCards)
-                        self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                        self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: card) as! PlayCards, at: 0)
                         writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!)
+                        sound.SEcoin()
                         self.playNextCard()
                     }
                     else
@@ -1421,9 +1438,7 @@ class GameScene: BaseScene {
                     case .finance:
                         self.finance.cards.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].selfCard!) as! EmployeeCards, at: 0)
                 }
-                self.players[self.currentPlayer!].currentCard!.setFront(isFront: false)
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
                 writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, targetCard: self.players[self.currentPlayer!].selfCard!)
                 self.playNextCard()
             }
@@ -1472,13 +1487,12 @@ class GameScene: BaseScene {
                         for each in cardToPlay
                         {
                             each.setFront(isFront: false)
-                            self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: each) as! PlayCards)
+                            self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: each) as! PlayCards, at: 0)
                             if each != self.players[self.currentPlayer!].currentCard!
                             {
                                 self.players[self.currentPlayer!].secondCard = each
                             }
                         }
-                        self.playcardsPool = randomPlayCards(array: self.playcardsPool)
                         writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].selfCard!)
                         self.playNextCard()
                     }
@@ -1557,8 +1571,7 @@ class GameScene: BaseScene {
                     self.players[self.currentPlayer!].getCard(card: self.development.cards.removeLast())
                     self.development.cards.last?.setFront(isFront: true)
                 }
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
                 writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, targetCard: self.players[self.currentPlayer!].publicCards!)
                 self.playNextCard()
                 
@@ -1579,8 +1592,7 @@ class GameScene: BaseScene {
                     self.players[self.players[self.currentPlayer!].OP!].getCard(card: self.development.cards.removeLast())
                     self.development.cards.last?.setFront(isFront: true)
                 }
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
                 writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.players[self.currentPlayer!].OP!], targetCard: self.players[self.currentPlayer!].publicCards!)
                 self.playNextCard()
             }
@@ -1596,8 +1608,7 @@ class GameScene: BaseScene {
                     if self.players[self.currentPlayer!].OPCard!.status != .VP
                     {
                         self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!))
-                        self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                        self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                        self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
                         writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()], targetCard: self.players[self.currentPlayer!].OPCard!)
                         self.playNextCard()
                     }
@@ -1634,13 +1645,12 @@ class GameScene: BaseScene {
                                 self.players[self.currentPlayer!].cardsPlayedThisTurn += 1
                                 for each in cardToPlay
                                 {
-                                    self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: each) as! PlayCards)
+                                    self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: each) as! PlayCards, at: 0)
                                     if each != self.players[self.currentPlayer!].currentCard!
                                     {
                                         self.players[self.currentPlayer!].secondCard = each
                                     }
                                 }
-                                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
                                 writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()],
                                          card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].OPCard!)
                                 self.playNextCard()
@@ -1684,8 +1694,7 @@ class GameScene: BaseScene {
                     self.players[self.currentPlayer!].OPCard!.setFront(isFront: false)
                     department!.cards.insert(self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!) as! EmployeeCards, at: 0)
 
-                    self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                    self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                    self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
                     self.playNextCard()
 
                 }
@@ -1697,10 +1706,9 @@ class GameScene: BaseScene {
         }
         else if self.gameState == gameStateMachine.selectBadIdeaToRelease
         {
-            self.playcardsPool.append(self.players[self.currentPlayer!].loseState(card: self.players[self.currentPlayer!].badIdeaCard!))
+            self.playcardsPool.insert(self.players[self.currentPlayer!].loseState(card: self.players[self.currentPlayer!].badIdeaCard!), at: 0)
             self.childNode(withName: "selectBadIdea")?.zPosition = -1
-            self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-            self.playcardsPool = self.randomPlayCards(array: self.playcardsPool)
+            self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
             writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, targetCard: self.players[self.currentPlayer!].badIdeaCard!)
 
             self.playNextCard()
@@ -1723,20 +1731,19 @@ class GameScene: BaseScene {
                 }
                 self.players[self.currentPlayer!].currentCard!.setFront(isFront: false)
                 self.players[self.currentPlayer!].secondCard!.setFront(isFront: false)
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].secondCard!) as! PlayCards)
-                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].secondCard!) as! PlayCards, at: 0)
                 writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].selfCard!)
                 self.playNextCard()
             }
             else       //POACH
             {
                 self.players[self.currentPlayer!].getCard(card: self.players[self.selectOP()].discardCard(card: self.players[self.currentPlayer!].OPCard!))
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards)
-                self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].secondCard!) as! PlayCards)
-                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].currentCard!) as! PlayCards, at: 0)
+                self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: self.players[self.currentPlayer!].secondCard!) as! PlayCards, at: 0)
                 writeLog(player: self.players[self.currentPlayer!], card: self.players[self.currentPlayer!].currentCard!, opponent: self.players[self.selectOP()], card2: self.players[self.currentPlayer!].secondCard!, targetCard: self.players[self.currentPlayer!].OPCard!)
                 self.playNextCard()
+                
             }
         }
     }
@@ -1769,7 +1776,14 @@ class GameScene: BaseScene {
         else if self.gameState == gameStateMachine.selectOPEmployee
         {
             self.childNode(withName: "OPCardDisable")?.zPosition = 1
-            self.childNode(withName: "selectOPEmployee")?.zPosition = -1
+            if self.players[self.currentPlayer!].currentCard!.type == "POACH"
+            {
+                self.childNode(withName: "selectOPEmployee")?.zPosition = -1
+            }
+            else
+            {
+                self.childNode(withName: "selectOP")?.zPosition = -1
+            }
             self.childNode(withName: "cancel")?.zPosition = -1
             self.childNode(withName: "confirm")?.zPosition = 1
             self.gameState = gameStateMachine.confirmWarning
@@ -1872,21 +1886,8 @@ class GameScene: BaseScene {
             return false
         }
     }
-    func printHandCards()
-    {
-        if self.currentPlayer! == 0
-        {
-            print("-------------player",self.currentPlayer!)
-            for each in self.players[self.currentPlayer!].cardsInHand
-            {
-                print(each.name!)
-            }
-        }
-    }
     func gameProcess(touchNode: [SKNode])
     {
-        
-        
         let node : SKNode? = touchNode.first
 
         if self.players.count == 0
@@ -1969,6 +1970,11 @@ class GameScene: BaseScene {
             }
             if self.sales.cards.count + self.finance.cards.count + self.HR.cards.count + self.development.cards.count == 40 - self.numberOfPlayers * 4
             {
+                if animationQueue.count != 0
+                {
+                    self.waitForAnimation = true
+                    return
+                }
                 self.childNode(withName: "pickCard")?.zPosition = -1
                 for _ in 0...(self.numberOfPlayers * 6 - 1)
                 {
@@ -2062,11 +2068,8 @@ class GameScene: BaseScene {
                 for card in touchNode
                 {
                     (card as! PlayCards).setFront(isFront: false)
-                    self.playcardsPool.append(self.players[self.currentPlayer!].discardCard(card: card) as! PlayCards)
+                    self.playcardsPool.insert(self.players[self.currentPlayer!].discardCard(card: card) as! PlayCards, at: 0)
                 }
-                self.playcardsPool = randomPlayCards(array: self.playcardsPool)
-//                self.CardsPosition()
-//                self.playerCardsPosition(player: self.currentPlayer!)
                 self.turnEnd()
             }
             
@@ -2515,6 +2518,7 @@ class GameScene: BaseScene {
                     self.players[self.currentPlayer!].currentCard = nil
                     self.playerCardsPosition(player: self.currentPlayer!, animation: 1)
                     self.childNode(withName: "selectOPEmployee")?.zPosition = -1
+                    self.childNode(withName: "selectOP")?.zPosition = -1
                     self.childNode(withName: "pleasePlayCards")?.zPosition = 1
                     self.childNode(withName: "confirm")?.zPosition = 1
                     self.gameProcess(touchNode: [node])
@@ -2903,7 +2907,19 @@ class GameScene: BaseScene {
     
     override func update(_ currentTime: TimeInterval) {
         
-        
+        if self.waitForAnimation
+        {
+            self.waitForAnimation = false
+            if self.gameState == .nothing
+            {
+                self.turnEnd()
+            }
+            else
+            {
+                self.gameProcess(touchNode: [])
+            }
+            return
+        }
         if self.players.count == 0
         {
             gameProcess(touchNode: [])

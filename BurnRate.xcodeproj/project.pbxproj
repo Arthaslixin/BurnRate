@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C965CB881E5F1659000F5FFA /* coin.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = C965CB871E5F1659000F5FFA /* coin.mp3 */; };
 		C9664B5D1E4F081500C7505C /* BurnRateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9664B5C1E4F081500C7505C /* BurnRateTests.swift */; };
 		C9664B681E4F081500C7505C /* BurnRateUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9664B671E4F081500C7505C /* BurnRateUITests.swift */; };
 		C9664B861E4F08B300C7505C /* achievements.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9664B751E4F08B300C7505C /* achievements.swift */; };
@@ -49,6 +50,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C965CB871E5F1659000F5FFA /* coin.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = coin.mp3; path = BurnRate/Assets.xcassets/coin.mp3; sourceTree = "<group>"; };
 		C9664B3E1E4F081500C7505C /* BurnRate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BurnRate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9664B581E4F081500C7505C /* BurnRateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BurnRateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9664B5C1E4F081500C7505C /* BurnRateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurnRateTests.swift; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 		C9664B351E4F081500C7505C = {
 			isa = PBXGroup;
 			children = (
+				C965CB871E5F1659000F5FFA /* coin.mp3 */,
 				C9664BA11E4F0A2000C7505C /* SE1.wav */,
 				C9664B971E4F08F400C7505C /* BGM_1.mp3 */,
 				C9664B401E4F081500C7505C /* BurnRate */,
@@ -232,7 +235,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 0820;
 				LastUpgradeCheck = 0820;
-				ORGANIZATIONNAME = Arthas;
+				ORGANIZATIONNAME = arthas;
 				TargetAttributes = {
 					C9664B3D1E4F081500C7505C = {
 						CreatedOnToolsVersion = 8.2.1;
@@ -279,6 +282,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C965CB881E5F1659000F5FFA /* coin.mp3 in Resources */,
 				C9664BA21E4F0A2000C7505C /* SE1.wav in Resources */,
 				C9664BA51E4F0A5D00C7505C /* LaunchScreen.storyboard in Resources */,
 				C9664B981E4F08F400C7505C /* BGM_1.mp3 in Resources */,
@@ -559,6 +563,7 @@
 				C9664B6E1E4F081500C7505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C9664B6F1E4F081500C7505C /* Build configuration list for PBXNativeTarget "BurnRateTests" */ = {
 			isa = XCConfigurationList;
@@ -567,6 +572,7 @@
 				C9664B711E4F081500C7505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C9664B721E4F081500C7505C /* Build configuration list for PBXNativeTarget "BurnRateUITests" */ = {
 			isa = XCConfigurationList;
@@ -575,6 +581,7 @@
 				C9664B741E4F081500C7505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -26,7 +26,33 @@ public class CardSprite: SKSpriteNode {
     var chosen = false
     var isFront = false
     var temp = false
-    public func moveAndShow(moveToPoint: CGPoint, zposition: CGFloat) {
+    public func setFront(isFront: Bool)
+    {
+        self.isFront = isFront
+        if self is EmployeeCards
+        {
+            if isFront
+            {
+                self.texture = employeeCardTexture[(self as! EmployeeCards).employeeCardFront]
+            }
+            else
+            {
+                self.texture = employeeCardTexture["EmployeeCardBack"]
+            }
+        }
+        else if  self is PlayCards
+        {
+            if isFront
+            {
+                self.texture = playCardTexture[(self as! PlayCards).playCardFront]
+            }
+            else
+            {
+                self.texture = playCardTexture["PlayCardBack"]
+            }
+        }
+    }
+    public func moveAndShow(moveToPoint: CGPoint, zposition: CGFloat, changeFront: Bool = false) {
         let positionData = GameSceneScaleData()
         positionData.gameSceneScaleData()
         let TimeInterval = 0.25
@@ -46,8 +72,15 @@ public class CardSprite: SKSpriteNode {
         let move2 = SKAction.move(to: moveToPoint, duration: TimeInterval)
         let smaller = SKAction.scale(to: 1, duration: TimeInterval)
         let group2 = SKAction.group([move2,smaller])
-        let seq = SKAction.sequence([zpositionPlus,group1,wait,group2,zpositionRestore])
-        
+        let back = SKAction.run {
+            self.setFront(isFront: false)
+        }
+
+        var seq = SKAction.sequence([zpositionPlus, group1, wait, group2, zpositionRestore])
+        if changeFront
+        {
+            seq = SKAction.sequence([zpositionPlus, group1, wait, group2, zpositionRestore, back])
+        }
         self.run(seq){ () in
             animationQueue.remove(at: animationQueue.index(of: num)!)
         }
@@ -77,19 +110,19 @@ public class EmployeeCards : CardSprite {
     var employeeName : String?
     
 
-    public func setFront(isFront: Bool)
-    {
-        self.isFront = isFront
-        if isFront
-        {
-            self.texture = employeeCardTexture[self.employeeCardFront]
-//            print(self.name!,employeeCardFront)
-        }
-        else
-        {
-            self.texture = employeeCardTexture["EmployeeCardBack"]
-        }
-    }
+//    public func setFront(isFront: Bool)
+//    {
+//        self.isFront = isFront
+//        if isFront
+//        {
+//            self.texture = employeeCardTexture[self.employeeCardFront]
+////            print(self.name!,employeeCardFront)
+//        }
+//        else
+//        {
+//            self.texture = employeeCardTexture["EmployeeCardBack"]
+//        }
+//    }
     
 }
 public class PlayCards : CardSprite {
@@ -104,18 +137,18 @@ public class PlayCards : CardSprite {
         let Card = PlayCards()
         return Card
     }
-    public func setFront(isFront: Bool)
-    {
-        self.isFront = isFront
-        if isFront
-        {
-            self.texture = playCardTexture[self.playCardFront]
-        }
-        else
-        {
-            self.texture = playCardTexture["PlayCardBack"]
-        }
-    }
+//    public func setFront(isFront: Bool)
+//    {
+//        self.isFront = isFront
+//        if isFront
+//        {
+//            self.texture = playCardTexture[self.playCardFront]
+//        }
+//        else
+//        {
+//            self.texture = playCardTexture["PlayCardBack"]
+//        }
+//    }
 }
 class PlayCardInfo
 {
