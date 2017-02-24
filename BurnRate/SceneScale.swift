@@ -67,7 +67,6 @@ class GameSceneScaleData: SceneScale {
     {
         self.sceneWidth = UIScreen.main.bounds.size.width
         self.sceneHeight = UIScreen.main.bounds.size.height
-//        print(self.sceneWidth, self.sceneHeight)
         if sceneWidth / sceneHeight == CGFloat(4.0/3.0)
         {
             self.author = CGPoint(x: 950, y: 50)
@@ -120,7 +119,7 @@ class GameSceneScaleData: SceneScale {
             self.player2Card.stateCardsYPlus = 25
             self.player2Card.cardsInHandXPlus = 0
         }
-        //else if 1.6 <= sceneWidth / sceneHeight && sceneWidth / sceneHeight <= 1.8
+        //1.6 <= sceneWidth / sceneHeight && sceneWidth / sceneHeight <= 1.8
         else
         {
             self.sceneWidth = 1024

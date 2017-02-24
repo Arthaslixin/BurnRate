@@ -677,7 +677,7 @@ class GameScene: BaseScene {
         self.playerCardsPosition(player: 0, animation: 1)
         self.playerCardsPosition(player: 1, animation: 1)
         self.playerCardsPosition(player: 2, animation: 1)
-        
+        self.players[self.currentPlayer!].currentCard = nil
         if self.players[self.currentPlayer!].cardsPlayedThisTurn < 4
         {
             
@@ -694,7 +694,6 @@ class GameScene: BaseScene {
             self.childNode(withName: "cancel")?.zPosition = -1
             self.turnEnd()
         }
-//        self.players[self.currentPlayer!].currentCard = nil
     }
     func AI()
     {

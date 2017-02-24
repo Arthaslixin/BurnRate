@@ -68,7 +68,7 @@ public class CardSprite: SKSpriteNode {
         let move1 = SKAction.move(to: CGPoint(x: positionData.sceneWidth / 2, y: positionData.sceneHeight / 2), duration: TimeInterval)
         let larger = SKAction.scale(to: 6, duration: TimeInterval)
         let group1 = SKAction.group([move1,larger])
-        let wait = SKAction.wait(forDuration: 0.5)
+        let wait = SKAction.wait(forDuration: 1.0)
         let move2 = SKAction.move(to: moveToPoint, duration: TimeInterval)
         let smaller = SKAction.scale(to: 1, duration: TimeInterval)
         let group2 = SKAction.group([move2,smaller])
