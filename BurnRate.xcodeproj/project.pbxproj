@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C944FD601E6139DD008A046B /* tutorialScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944FD5F1E6139DD008A046B /* tutorialScene.swift */; };
 		C965CB881E5F1659000F5FFA /* coin.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = C965CB871E5F1659000F5FFA /* coin.mp3 */; };
 		C9664B5D1E4F081500C7505C /* BurnRateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9664B5C1E4F081500C7505C /* BurnRateTests.swift */; };
 		C9664B681E4F081500C7505C /* BurnRateUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9664B671E4F081500C7505C /* BurnRateUITests.swift */; };
@@ -50,6 +51,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C944FD5F1E6139DD008A046B /* tutorialScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorialScene.swift; sourceTree = "<group>"; };
 		C965CB871E5F1659000F5FFA /* coin.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = coin.mp3; path = BurnRate/Assets.xcassets/coin.mp3; sourceTree = "<group>"; };
 		C9664B3E1E4F081500C7505C /* BurnRate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BurnRate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9664B581E4F081500C7505C /* BurnRateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BurnRateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -141,6 +143,7 @@
 				C9664BA31E4F0A5D00C7505C /* LaunchScreen.storyboard */,
 				C9664BA41E4F0A5D00C7505C /* Main.storyboard */,
 				C9664B7D1E4F08B300C7505C /* GameScene.swift */,
+				C944FD5F1E6139DD008A046B /* tutorialScene.swift */,
 				C9664B7E1E4F08B300C7505C /* GameViewController.swift */,
 				C9664B7F1E4F08B300C7505C /* Info.plist */,
 				C9664B801E4F08B300C7505C /* log.swift */,
@@ -325,6 +328,7 @@
 				C9664B921E4F08B300C7505C /* player.swift in Sources */,
 				C9664B8F1E4F08B300C7505C /* GameViewController.swift in Sources */,
 				C9664B911E4F08B300C7505C /* log.swift in Sources */,
+				C944FD601E6139DD008A046B /* tutorialScene.swift in Sources */,
 				C9664B861E4F08B300C7505C /* achievements.swift in Sources */,
 				C9664B941E4F08B300C7505C /* SoundManager.swift in Sources */,
 			);

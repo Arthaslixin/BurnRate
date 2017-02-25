@@ -153,9 +153,9 @@ class GameScene: BaseScene {
         createLabel(text: "", name: "win", pos: positionData.chooseStartPlayer_Win, z: -1, fontSize : 50)
         createLabel(text: "Restart", name: "restart", pos: positionData.confirm_Restart, z: -1, fontSize: 50)
         createLabel(text: "Choose start player:", name: "chooseStartPlayer", pos: positionData.chooseStartPlayer_Win, z: 1)
-        createLabel(text: "Player1", name: "startFromPlayer0", pos: positionData.startFromPlayer0, z: 1)
-        createLabel(text: "Player2", name: "startFromPlayer1", pos: positionData.startFromPlayer1, z: 1)
-        createLabel(text: "Player3", name: "startFromPlayer2", pos: positionData.startFromPlayer2, z: 1)
+        createLabel(text: "Robin", name: "startFromPlayer0", pos: positionData.startFromPlayer0, z: 1)
+        createLabel(text: "Player", name: "startFromPlayer1", pos: positionData.startFromPlayer1, z: 1)
+        createLabel(text: "Jack", name: "startFromPlayer2", pos: positionData.startFromPlayer2, z: 1)
         createLabel(text: "", name: "currentPlayerLabel", pos: positionData.currentPlayer, z: -1)
         createLabel(text: "Please pick an employee card:", name: "pickCard", pos: positionData.labels, z: -1)
         createLabel(text: "Play Cards", name: "playcards", pos: positionData.playcards, z: -1)
@@ -181,7 +181,7 @@ class GameScene: BaseScene {
         createLabel(text: "", name: "addMoney", pos: CGPoint(x: 0, y: 0), z: -1, color: UIColor.yellow, fontSize: 50)
         if self.childNode(withName: "currentPlayerLabel") == nil && self.currentPlayer != nil
         {
-            let currentPlayerLabel = SKLabelNode(text: "Player\(self.currentPlayer! + 1)'s Turn :")
+            let currentPlayerLabel = SKLabelNode(text: self.players[self.currentPlayer!].name! + "'s Turn :")
             currentPlayerLabel.position = CGPoint(x: 500, y: 720)
             currentPlayerLabel.zPosition = CGFloat(1)
             currentPlayerLabel.name = "currentPlayerLabel"
@@ -1917,7 +1917,18 @@ class GameScene: BaseScene {
             for i in 0...self.numberOfPlayers - 1
             {
                 let newPlayer = Player()
-                newPlayer.name = "player\(i)"
+                if i == 0
+                {
+                    newPlayer.name = "Robin"
+                }
+                else if i == 1
+                {
+                    newPlayer.name = "Player"
+                }
+                else if i == 2
+                {
+                    newPlayer.name = "Jack"
+                }
                 if gameMode == .single
                 {
                     if i != 1
@@ -2212,7 +2223,7 @@ class GameScene: BaseScene {
                     self.childNode(withName: "startFromPlayer0")?.zPosition = -1
                     self.childNode(withName: "startFromPlayer1")?.zPosition = -1
                     self.childNode(withName: "startFromPlayer2")?.zPosition = -1
-                    (self.childNode(withName: "currentPlayerLabel") as! SKLabelNode).text = "Player\(self.currentPlayer! + 1)'s Turn :"
+                    (self.childNode(withName: "currentPlayerLabel") as! SKLabelNode).text = self.players[self.currentPlayer!].name! + "'s Turn :"
                     self.childNode(withName: "currentPlayerLabel")?.zPosition = 1
                     self.childNode(withName: "pickCard")?.zPosition = 1
                     self.gameProcess(touchNode: [])
@@ -2846,7 +2857,7 @@ class GameScene: BaseScene {
         }
         else
         {
-            (self.childNode(withName: "currentPlayerLabel") as! SKLabelNode).text = "Player\(self.currentPlayer! + 1)'s Turn :"
+            (self.childNode(withName: "currentPlayerLabel") as! SKLabelNode).text = self.players[self.currentPlayer!].name! + "'s Turn :"
             if gameMode == .hotseat
             {
                 for player in 0...self.numberOfPlayers - 1
