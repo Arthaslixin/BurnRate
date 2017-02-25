@@ -34,12 +34,13 @@ class BaseScene:SKScene
         self.labels.append(newlabel)
     }
     
-    func createButton(name: String, pos: CGPoint, z: CGFloat, imgName: String)
+    func createButton(name: String, pos: CGPoint, z: CGFloat, imgName: String, scale: CGFloat = 1.0)
     {
         let newbutton = SKSpriteNode(imageNamed: imgName)
         newbutton.name = name
         newbutton.position = pos
         newbutton.zPosition = z
+        newbutton.setScale(scale)
         self.addChild(newbutton)
     }
     
