@@ -8,3 +8,11 @@
 
 import Foundation
 import GameplayKit
+
+class tutorialScene: BaseScene
+{
+    func createPic(pic: String, name：String， zposition: CGFloat, position: CGPoint)
+    {
+//        let pic = SKFieldNode
+    }
+}
