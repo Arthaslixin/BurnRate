@@ -181,31 +181,15 @@ public class Player {
             switch (card as! EmployeeCards).department {
                 case .sales:
                     self.sales.cards.append(card as! EmployeeCards)
-//                    if self.isAI
-//                    {
-//                        self.sales.cards.last?.setFront(isFront: true)
-//                    }
                     self.sort(department: self.sales)
                 case .finance:
                     self.finance.cards.append(card as! EmployeeCards)
-//                    if self.isAI
-//                    {
-//                        self.finance.cards.last?.setFront(isFront: true)
-//                    }
                     self.sort(department: self.finance)
                 case .development:
                     self.development.cards.append(card as! EmployeeCards)
-//                    if self.isAI
-//                    {
-//                        self.development.cards.last?.setFront(isFront: true)
-//                    }
                     self.sort(department: self.development)
                 case .HR:
                     self.HR.cards.append(card as! EmployeeCards)
-//                    if self.isAI
-//                    {
-//                        self.HR.cards.last?.setFront(isFront: true)
-//                    }
                     self.sort(department: self.HR)
             }
         }

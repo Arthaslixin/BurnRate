@@ -11,7 +11,7 @@ import SpriteKit
 import AVFoundation
 
 class SoundManager :SKNode{
-    //申明一个播放器
+    //声明一个播放器
     var BGMPlayer = AVAudioPlayer()
     //播放点击的动作音效
     let hitAct = SKAction.playSoundFileNamed("SE1.wav", waitForCompletion: false)

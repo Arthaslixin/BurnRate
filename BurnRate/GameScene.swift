@@ -596,7 +596,6 @@ class GameScene: BaseScene {
         players[player].VP = 0
         players[player].gameover = true
     }
-    
     func selectOP() -> Int
     {
         for num in 0...self.numberOfPlayers - 1
